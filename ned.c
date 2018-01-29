@@ -5,28 +5,25 @@
 
 #include <ncurses.h>
 
-// Do not use Ctrl-q or Ctrl-m due to flow control shenanigans
-#define KEY_CTRL(c) ((c)-98)
+#define KEY_CTRL(c) ((c)-96)
 
 int main() {
     // set up ncurses and enable raw mode so we can get those sweet, sweet keycodes
     initscr();
     raw();
     noecho();
+    nonl();
     keypad(stdscr, TRUE);
+    define_key("\b", 8);  // there's some weirdness with Ctrl-H sending some funky backspace char instead of 8, band-aid while investigating this
 
-    // main loop
     while (TRUE) {
         int c = getch();
 
-        switch (c) {
-            // Ctrl-X to quit
-            case KEY_CTRL('x'):
-                endwin();
-                return 0;
-
-            default:
-                break;
+        if (c == KEY_CTRL('q')) {
+            break;
         }
     }
+
+    endwin();
+    return 0;
 }
