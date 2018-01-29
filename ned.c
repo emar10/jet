@@ -4,8 +4,25 @@
  */
 
 #include <ncurses.h>
+#include <stdlib.h>
 
 #define KEY_CTRL(c) ((c)-96)
+
+void screen_shutdown() {
+    endwin();
+}
+
+void screen_input() {
+    int c = getch();
+
+    switch (c) {
+        case KEY_CTRL('q'):
+            exit(0);
+
+        default:
+            ;
+    }
+}
 
 int main() {
     // set up ncurses and enable raw mode so we can get those sweet, sweet keycodes
@@ -15,15 +32,9 @@ int main() {
     nonl();
     keypad(stdscr, TRUE);
     define_key("\b", 8);  // there's some weirdness with Ctrl-H sending some funky backspace char instead of 8, band-aid while investigating this
+    atexit(screen_shutdown);
 
     while (TRUE) {
-        int c = getch();
-
-        if (c == KEY_CTRL('q')) {
-            break;
-        }
+        screen_input();
     }
-
-    endwin();
-    return 0;
 }
