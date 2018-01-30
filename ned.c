@@ -5,16 +5,57 @@
 
 #include <ncurses.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define VERSION v0.0.1
 
 #define KEY_CTRL(c) ((c)-96)
 
+typedef struct line {
+    int len;
+    char *s;
+} line;
+
 struct editor_state {
     int y, x;
+    int sy, sx;
     int maxy, maxx;
+    int len;
+    line *lines;
 };
 struct editor_state es;
+
+void editor_insert_line(char *s, size_t len) {
+    es.lines = realloc(es.lines, sizeof(line) * (es.len + 1));
+    int y = es.len;
+
+    es.lines[y].len = (int)len;
+    es.lines[y].s = malloc(len + 1);
+    memcpy(es.lines[y].s, s, len);
+    es.lines[y].s[len] = '\0';
+    es.len++;
+}
+
+void editor_open(char *filename) {
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+        exit(1);
+    }
+
+    char *curr = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    while ((read = getline(&curr, &len, f)) != -1) {
+        if (curr[read - 1] == '\n') {
+            read--;
+        }
+        editor_insert_line(curr, (size_t)read);
+    }
+
+    free(curr);
+    fclose(f);
+}
 
 void editor_move(int key) {
     switch (key) {
@@ -25,14 +66,12 @@ void editor_move(int key) {
             }
             break;
         case KEY_DOWN:
-            if (es.y < es.maxy - 1) {
+            if (es.y < es.len - 1) {
                 es.y++;
             }
             break;
         case KEY_RIGHT:
-            if (es.x < es.maxx - 1) {
-                es.x++;
-            }
+            es.x++;
             break;
         case KEY_LEFT:
             if (es.x > 0) {
@@ -42,15 +81,21 @@ void editor_move(int key) {
 
         // page up/down
         case KEY_PPAGE:  // Page Up
-            es.y = 0;
+            es.y -= es.maxy - 1;
+            if (es.y < 0) {
+                es.y = 0;
+            }
             break;
         case KEY_NPAGE:  // Page Down
-            es.y = es.maxy - 1;
+            es.y += es.maxy - 1;
             break;
 
         // home/end
         case KEY_HOME:
-            es.x = 0;
+            es.x -= es.maxx - 1;
+            if (es.x < 0) {
+                es.x = 0;
+            }
             break;
         case KEY_END:
             es.x = es.maxx - 1;
@@ -65,21 +110,47 @@ void screen_shutdown() {
 }
 
 void screen_draw_lines() {
-    for (int i = 0; i < getmaxy(stdscr); i++) {
-        mvprintw(i, 0, "~");
+    for (int y = 0; y < getmaxy(stdscr); y++) {
+        move(y, 0);
+        if (y + es.sy < es.len) {
+            line l = es.lines[y + es.sy];
+            int x = 0;
+            while (x < es.maxx && x < l.len - es.sx) {
+                addch((chtype)l.s[x + es.sx]);
+                x++;
+            }
+        } else {
+            addch('~');
+        }
     }
 }
 
 void screen_update() {
+    int y, x;
+
     // clear the screen and move cursor to top left
     erase();
+    getyx(stdscr, y, x);
     move(0, 0);
+
+    // scroll if needed
+    if (es.y < es.sy) {
+        es.sy = es.y;
+    } else if (es.y >= es.sy + es.maxy) {
+        es.sy = es.y - es.maxy + 1;
+    }
+
+    if (es.x < es.sx) {
+        es.sx = es.x;
+    } else if (es.x >= es.sx + es.maxx) {
+        es.sx = es.x - es.maxx + 1;
+    }
 
     // draw text
     screen_draw_lines();
 
     // move cursor back to current location
-    move(es.y, es.x);
+    move(es.y - es.sy, es.x - es.sx);
     refresh();
 }
 
@@ -106,19 +177,27 @@ void screen_input() {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     // set up ncurses and enable raw mode so we can get those sweet, sweet keycodes
     initscr();
     raw();
     noecho();
     nonl();
     keypad(stdscr, TRUE);
-    define_key("\b", 8);  // there's some weirdness with Ctrl-H sending some funky backspace char instead of 8, band-aid while investigating this
+    define_key("\b", 8);
     atexit(screen_shutdown);
 
     // set initial editor state
     es.y = es.x = 0;
+    es.sy = es.sx = 0;
     getmaxyx(stdscr, es.maxy, es.maxx);
+    es.len = 0;
+    es.lines = NULL;
+
+    // open file
+    if (argc > 1) {
+        editor_open(argv[1]);
+    }
 
     while (TRUE) {
         screen_update();
