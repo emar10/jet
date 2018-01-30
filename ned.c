@@ -16,20 +16,45 @@ struct editor_state {
 };
 struct editor_state es;
 
-void editor_move(int dir) {
-    switch (dir) {
+void editor_move(int key) {
+    switch (key) {
+        // arrows
         case KEY_UP:
-            es.y--;
+            if (es.y > 0) {
+                es.y--;
+            }
             break;
         case KEY_DOWN:
-            es.y++;
+            if (es.y < es.maxy - 1) {
+                es.y++;
+            }
             break;
         case KEY_RIGHT:
-            es.x++;
+            if (es.x < es.maxx - 1) {
+                es.x++;
+            }
             break;
         case KEY_LEFT:
-            es.x--;
+            if (es.x > 0) {
+                es.x--;
+            }
             break;
+
+        // page up/down
+        case KEY_PPAGE:  // Page Up
+            es.y = 0;
+            break;
+        case KEY_NPAGE:  // Page Down
+            es.y = es.maxy - 1;
+            break;
+
+        // home/end
+        case KEY_HOME:
+            es.x = 0;
+            break;
+        case KEY_END:
+            es.x = es.maxx - 1;
+
         default:
             ;
     }
@@ -66,7 +91,11 @@ void screen_input() {
         case KEY_DOWN:
         case KEY_RIGHT:
         case KEY_LEFT:
-            editor_move('c');
+        case KEY_PPAGE:
+        case KEY_NPAGE:
+        case KEY_HOME:
+        case KEY_END:
+            editor_move(c);
             break;
 
         case KEY_CTRL('q'):
