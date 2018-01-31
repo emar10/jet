@@ -12,6 +12,16 @@
 
 #define KEY_CTRL(c) ((c)-96)
 
+void screen_shutdown() {
+    endwin();
+}
+
+void screen_die(const char *error, int code) {
+    screen_shutdown();
+    printf("Error: %s\n", error);
+    exit(code);
+}
+
 typedef struct line {
     int len;
     char *s;
@@ -40,7 +50,7 @@ void editor_insert_line(char *s, size_t len) {
 void editor_open(char *filename) {
     FILE *f = fopen(filename, "r");
     if (!f) {
-        exit(1);
+        screen_die("could not open file", 1);;
     }
 
     char *curr = NULL;
@@ -117,10 +127,6 @@ void editor_move(int key) {
     }
 }
 
-void screen_shutdown() {
-    endwin();
-}
-
 void screen_draw_lines() {
     for (int y = 0; y < getmaxy(stdscr); y++) {
         move(y, 0);
@@ -182,6 +188,7 @@ void screen_input() {
             break;
 
         case KEY_CTRL('q'):
+            screen_shutdown();
             exit(0);
 
         default:
@@ -197,7 +204,6 @@ int main(int argc, char *argv[]) {
     nonl();
     keypad(stdscr, TRUE);
     define_key("\b", 8);
-    atexit(screen_shutdown);
 
     // set initial editor state
     es.y = es.x = 0;
@@ -210,6 +216,11 @@ int main(int argc, char *argv[]) {
     // open file
     if (argc > 1) {
         editor_open(argv[1]);
+    }
+
+    // add blank line if no args/file is empty
+    if (es.len == 0) {
+        editor_insert_line("", 0);
     }
 
     while (TRUE) {
