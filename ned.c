@@ -8,6 +8,7 @@
 #include <string.h>
 
 #define VERSION v0.0.1
+#define TABSTOP 4
 
 #define KEY_CTRL(c) ((c)-96)
 
@@ -71,7 +72,9 @@ void editor_move(int key) {
             }
             break;
         case KEY_RIGHT:
-            es.x++;
+            if (es.x < es.lines[es.y].len) {
+                es.x++;
+            }
             break;
         case KEY_LEFT:
             if (es.x > 0) {
@@ -81,13 +84,13 @@ void editor_move(int key) {
 
         // page up/down
         case KEY_PPAGE:  // Page Up
-            es.y -= es.maxy - 1;
+            es.y = es.sy -= es.maxy;
             if (es.y < 0) {
-                es.y = 0;
+                es.y = es.sy = 0;
             }
             break;
         case KEY_NPAGE:  // Page Down
-            es.y += es.maxy - 1;
+            es.y = es.sy += es.maxy;
             break;
 
         // home/end
@@ -102,6 +105,15 @@ void editor_move(int key) {
 
         default:
             ;
+    }
+
+    // snap the cursor to bounds of editor if needed
+    if (es.y >= es.len) {
+        es.y = es.len - 1;
+    }
+    line l = es.lines[es.y];
+    if (es.x > l.len) {
+        es.x = l.len;
     }
 }
 
@@ -193,6 +205,7 @@ int main(int argc, char *argv[]) {
     getmaxyx(stdscr, es.maxy, es.maxx);
     es.len = 0;
     es.lines = NULL;
+    set_tabsize(TABSTOP);
 
     // open file
     if (argc > 1) {
