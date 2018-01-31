@@ -6,6 +6,7 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define VERSION v0.0.1
 #define TABSTOP 4
