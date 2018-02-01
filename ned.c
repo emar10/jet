@@ -2,11 +2,11 @@
  * ned.c
  * Main file. Initializes ncurses window and draws text from a file to it.
  */
+#define _GNU_SOURCE
 
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #define VERSION v0.0.1
 #define TABSTOP 4
