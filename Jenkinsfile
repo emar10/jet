@@ -2,9 +2,19 @@ pipeline {
   agent any
   stages {
     stage('Build') {
-      steps {
-        sh 'make'
-        archiveArtifacts(artifacts: 'ned', onlyIfSuccessful: true)
+      parallel {
+        stage('Linux') {
+          steps {
+            sh 'make'
+            archiveArtifacts(artifacts: 'ned*', onlyIfSuccessful: true)
+          }
+        }
+        stage('MacOS') {
+          steps {
+            sh 'make CC=/opt/osxcross/bin/o64-clang'
+            archiveArtifacts(artifacts: 'ned*', onlyIfSuccessful: true)
+          }
+        }
       }
     }
   }
