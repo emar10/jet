@@ -3,6 +3,7 @@
  * Runs a curses screen and echoes the keycode for any pressed key
  */
 #include <ncurses.h>
+#include <stdlib.h>
 
 int main() {
     initscr();
@@ -23,3 +24,4 @@ int main() {
 
         printw("%d", c);
     }
+}

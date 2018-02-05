@@ -56,6 +56,18 @@ void editor_insert_char(int c) {
     es.x++;
 }
 
+void editor_del_char() {
+    line *l = &es.lines[es.y];
+
+    if (es.x > 0) {
+        es.x--;
+        memmove(&l->s[es.x], &l->s[es.x + 1], l->len - es.x);
+        l->len--;
+    } else {
+        // TODO remove line
+    }
+}
+
 void editor_open(char *filename) {
     FILE *f = fopen(filename, "r");
     if (!f) {
@@ -199,6 +211,12 @@ void screen_input() {
         case KEY_CTRL('q'):
             screen_shutdown();
             exit(0);
+            break;
+
+        case KEY_BACKSPACE:
+        case 127:
+            editor_del_char();
+            break;
 
         default:
             editor_insert_char(c);
