@@ -48,6 +48,14 @@ void editor_insert_line(char *s, size_t len) {
     es.len++;
 }
 
+void editor_insert_char(int c) {
+    es.lines[es.y].s = realloc(es.lines[es.y].s, es.lines[es.y].len + 1);
+    memmove(&es.lines[es.y].s[es.x + 1], &es.lines[es.y].s[es.x], es.lines[es.y].len - es.x);
+    es.lines[es.y].len++;
+    es.lines[es.y].s[es.x] = c;
+    es.x++;
+}
+
 void editor_open(char *filename) {
     FILE *f = fopen(filename, "r");
     if (!f) {
@@ -193,7 +201,7 @@ void screen_input() {
             exit(0);
 
         default:
-            ;
+            editor_insert_char(c);
     }
 }
 
