@@ -3,3 +3,6 @@ ned
 
 # object files
 *.o
+
+# debugging symbols
+*.dsym/
