@@ -70,8 +70,15 @@ void editor_del_char() {
         es.x--;
         memmove(&l->s[es.x], &l->s[es.x + 1], l->len - es.x);
         l->len--;
-    } else {
-        // TODO remove line
+    } else if (es.y > 0) {  // don't delete lines[0] pls
+        line *prev = &es.lines[es.y - 1];
+        prev->s = realloc(prev->s, prev->len + l->len);
+        strcat(prev->s, l->s);
+        es.x = prev->len;
+        prev->len += l->len;
+        memmove(l, &es.lines[es.y + 1], sizeof(line) * (es.len - (es.y + 1)));
+        es.len--;
+        es.y--;
     }
 }
 
