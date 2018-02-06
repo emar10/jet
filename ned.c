@@ -46,7 +46,6 @@ void editor_insert_line(char *s, size_t len, int y)  {
         y = es.len;
     }
 
-
     es.lines[y].len = (int)len;
     es.lines[y].s = malloc(len + 1);
     memcpy(es.lines[y].s, s, len);
@@ -277,6 +276,9 @@ int main(int argc, char *argv[]) {
     if (es.len == 0) {
         editor_insert_line("", 0, 0);
     }
+
+    // move cursor back to start
+    es.y = es.x = 0;
 
     while (TRUE) {
         screen_update();
