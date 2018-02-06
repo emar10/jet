@@ -37,15 +37,22 @@ struct editor_state {
 };
 struct editor_state es;
 
-void editor_insert_line(char *s, size_t len) {
+void editor_insert_line(char *s, size_t len, int y)  {
     es.lines = realloc(es.lines, sizeof(line) * (es.len + 1));
-    int y = es.len;
+
+    if (y < es.len) {
+        memmove(&es.lines[y + 1], &es.lines[y], sizeof(line) * (es.len - y));
+    } else {
+        y = es.len;
+    }
 
     es.lines[y].len = (int)len;
     es.lines[y].s = malloc(len + 1);
     memcpy(es.lines[y].s, s, len);
     es.lines[y].s[len] = '\0';
     es.len++;
+    es.y++;
+    es.x = 0;
 }
 
 void editor_insert_char(int c) {
@@ -82,7 +89,7 @@ void editor_open(char *filename) {
         if (curr[read - 1] == '\n') {
             read--;
         }
-        editor_insert_line(curr, (size_t)read);
+        editor_insert_line(curr, (size_t)read, es.len);
     }
 
     free(curr);
@@ -218,6 +225,11 @@ void screen_input() {
             editor_del_char();
             break;
 
+        case KEY_ENTER:
+        case 13:
+            editor_insert_line(NULL, 0, es.y + 1);
+            break;
+
         default:
             editor_insert_char(c);
     }
@@ -247,7 +259,7 @@ int main(int argc, char *argv[]) {
 
     // add blank line if no args/file is empty
     if (es.len == 0) {
-        editor_insert_line("", 0);
+        editor_insert_line("", 0, 0);
     }
 
     while (TRUE) {
