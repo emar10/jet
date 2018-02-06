@@ -46,10 +46,19 @@ void editor_insert_line(char *s, size_t len, int y)  {
         y = es.len;
     }
 
+
     es.lines[y].len = (int)len;
     es.lines[y].s = malloc(len + 1);
     memcpy(es.lines[y].s, s, len);
     es.lines[y].s[len] = '\0';
+
+    // if we're splitting a line, trim it
+    if (es.x < es.lines[y - 1].len) {
+        es.lines[y - 1].len -= len;
+        es.lines[y - 1].s = realloc(es.lines[y - 1].s, es.lines[y - 1].len + 1);
+        es.lines[y - 1].s[es.lines[y - 1].len] = '\0';
+    }
+
     es.len++;
     es.y++;
     es.x = 0;
@@ -234,7 +243,7 @@ void screen_input() {
 
         case KEY_ENTER:
         case 13:
-            editor_insert_line(NULL, 0, es.y + 1);
+            editor_insert_line(&es.lines[es.y].s[es.x], es.lines[es.y].len - es.x, es.y + 1);
             break;
 
         default:
