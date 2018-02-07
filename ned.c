@@ -37,15 +37,57 @@ struct editor_state {
 };
 struct editor_state es;
 
-void editor_insert_line(char *s, size_t len) {
+void editor_insert_line(char *s, size_t len, int y)  {
     es.lines = realloc(es.lines, sizeof(line) * (es.len + 1));
-    int y = es.len;
+
+    if (y < es.len) {
+        memmove(&es.lines[y + 1], &es.lines[y], sizeof(line) * (es.len - y));
+    } else {
+        y = es.len;
+    }
 
     es.lines[y].len = (int)len;
     es.lines[y].s = malloc(len + 1);
     memcpy(es.lines[y].s, s, len);
     es.lines[y].s[len] = '\0';
+
+    // if we're splitting a line, trim it
+    if (es.x < es.lines[y - 1].len) {
+        es.lines[y - 1].len -= len;
+        es.lines[y - 1].s = realloc(es.lines[y - 1].s, es.lines[y - 1].len + 1);
+        es.lines[y - 1].s[es.lines[y - 1].len] = '\0';
+    }
+
     es.len++;
+    es.y++;
+    es.x = 0;
+}
+
+void editor_insert_char(int c) {
+    es.lines[es.y].s = realloc(es.lines[es.y].s, es.lines[es.y].len + 1);
+    memmove(&es.lines[es.y].s[es.x + 1], &es.lines[es.y].s[es.x], es.lines[es.y].len - es.x);
+    es.lines[es.y].len++;
+    es.lines[es.y].s[es.x] = c;
+    es.x++;
+}
+
+void editor_del_char() {
+    line *l = &es.lines[es.y];
+
+    if (es.x > 0) {
+        es.x--;
+        memmove(&l->s[es.x], &l->s[es.x + 1], l->len - es.x);
+        l->len--;
+    } else if (es.y > 0) {  // don't delete lines[0] pls
+        line *prev = &es.lines[es.y - 1];
+        prev->s = realloc(prev->s, prev->len + l->len);
+        strcat(prev->s, l->s);
+        es.x = prev->len;
+        prev->len += l->len;
+        memmove(l, &es.lines[es.y + 1], sizeof(line) * (es.len - (es.y + 1)));
+        es.len--;
+        es.y--;
+    }
 }
 
 void editor_open(char *filename) {
@@ -62,7 +104,7 @@ void editor_open(char *filename) {
         if (curr[read - 1] == '\n') {
             read--;
         }
-        editor_insert_line(curr, (size_t)read);
+        editor_insert_line(curr, (size_t)read, es.len);
     }
 
     free(curr);
@@ -173,6 +215,15 @@ void screen_update() {
     refresh();
 }
 
+int screen_is_printable(int c) {
+    // for now only print between 32 and 255
+    if (c >= 32 && c <= 255) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
 void screen_input() {
     int c = getch();
 
@@ -191,9 +242,22 @@ void screen_input() {
         case KEY_CTRL('q'):
             screen_shutdown();
             exit(0);
+            break;
+
+        case KEY_BACKSPACE:
+        case 127:
+            editor_del_char();
+            break;
+
+        case KEY_ENTER:
+        case 13:
+            editor_insert_line(&es.lines[es.y].s[es.x], es.lines[es.y].len - es.x, es.y + 1);
+            break;
 
         default:
-            ;
+            if (screen_is_printable(c)) {
+                editor_insert_char(c);
+            }
     }
 }
 
@@ -221,8 +285,11 @@ int main(int argc, char *argv[]) {
 
     // add blank line if no args/file is empty
     if (es.len == 0) {
-        editor_insert_line("", 0);
+        editor_insert_line("", 0, 0);
     }
+
+    // move cursor back to start
+    es.y = es.x = 0;
 
     while (TRUE) {
         screen_update();
