@@ -93,7 +93,7 @@ void editor_del_char() {
 void editor_open(char *filename) {
     FILE *f = fopen(filename, "r");
     if (!f) {
-        screen_die("could not open file", 1);;
+        screen_die("could not open file", 1);
     }
 
     char *curr = NULL;
@@ -109,6 +109,20 @@ void editor_open(char *filename) {
 
     free(curr);
     fclose(f);
+}
+
+void editor_write(char *filename) {
+    FILE *f = fopen(filename, "w");
+
+    if (!f) {
+        screen_die("could not open file for writing", 1);
+    }
+
+    // write the lines
+    for (int i = 0; i < es.len; i++) {
+        fputs(es.lines[i].s, f);
+        fputc('\n', f);
+    }
 }
 
 void editor_move(int key) {
@@ -242,6 +256,10 @@ void screen_input() {
         case KEY_CTRL('q'):
             screen_shutdown();
             exit(0);
+            break;
+
+        case KEY_CTRL('s'):
+            editor_write("test.txt");
             break;
 
         case KEY_BACKSPACE:
