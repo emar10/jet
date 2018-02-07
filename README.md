@@ -5,6 +5,6 @@ Terminal-based \*nix text editor with a really dumb working title.
 Clone, `make`, binary is written as `ned`.
 
 ## Usage
-At present, `ned` can only display text files.
+Ned can open existing files or start with an empty buffer. The buffer can be edited, but changes cannot be saved.
 
-Run using `ned <filename`. Arrow keys navigate through the file, Page Up and Page Down to scroll, Home and End snap to beginning/end of line. Ctrl-Q to quit.
+Run using `ned <filename>`. Arrow keys navigate through the file, Page Up and Page Down to scroll, Home and End snap to beginning/end of line. Ctrl-Q to quit.
