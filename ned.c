@@ -37,6 +37,14 @@ struct editor_state {
 };
 struct editor_state es;
 
+void editor_trim_line(line *l, int len) {
+    if (es.x < l->len) {
+        l->len -= len;
+        l->s = realloc(l->s, l->len + 1);
+        l->s[l->len] = '\0';
+    }
+}
+
 void editor_insert_line(char *s, size_t len, int y)  {
     es.lines = realloc(es.lines, sizeof(line) * (es.len + 1));
 
@@ -51,16 +59,9 @@ void editor_insert_line(char *s, size_t len, int y)  {
     memcpy(es.lines[y].s, s, len);
     es.lines[y].s[len] = '\0';
 
-    // if we're splitting a line, trim it
-    if (es.x < es.lines[y - 1].len) {
-        es.lines[y - 1].len -= len;
-        es.lines[y - 1].s = realloc(es.lines[y - 1].s, es.lines[y - 1].len + 1);
-        es.lines[y - 1].s[es.lines[y - 1].len] = '\0';
-    }
 
     es.len++;
     es.y++;
-    es.x = 0;
 }
 
 void editor_insert_char(int c) {
@@ -252,6 +253,8 @@ void screen_input() {
         case KEY_ENTER:
         case 13:
             editor_insert_line(&es.lines[es.y].s[es.x], es.lines[es.y].len - es.x, es.y + 1);
+            editor_trim_line(&es.lines[es.y - 1], es.lines[es.y - 1].len - es.x);
+            es.x = 0;
             break;
 
         default:
