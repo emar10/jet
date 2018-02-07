@@ -215,6 +215,15 @@ void screen_update() {
     refresh();
 }
 
+int screen_is_printable(int c) {
+    // for now only print between 32 and 255
+    if (c >= 32 && c <= 255) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
 void screen_input() {
     int c = getch();
 
@@ -246,7 +255,9 @@ void screen_input() {
             break;
 
         default:
-            editor_insert_char(c);
+            if (screen_is_printable(c)) {
+                editor_insert_char(c);
+            }
     }
 }
 
