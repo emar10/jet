@@ -1,11 +1,11 @@
 LIBS=-lncurses
-ARGS=ned.c -o ned -Wall -Wextra -pedantic -std=c99
+ARGS=-o jet -Wall -Wextra -pedantic -std=c99
 
-ned: ned.c
+jet: jet.c
 	$(CC) $(ARGS) $(LIBS)
 
-debug: ned.c
+debug: jet.c
 	$(CC) -g $(ARGS) $(LIBS)
 
 clean:
-	rm -rf ned
+	rm -rf jet
