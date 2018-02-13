@@ -23,6 +23,17 @@ void screen_die(const char *error, int code) {
     exit(code);
 }
 
+// save the current state and return to regular mode
+void screen_pause() {
+    def_prog_mode();
+    endwin();
+}
+
+void screen_resume() {
+    reset_prog_mode();
+    refresh();
+}
+
 typedef struct line {
     int len;
     char *s;
@@ -34,6 +45,7 @@ struct editor_state {
     int maxy, maxx;
     int len;
     line *lines;
+    char *filename;
 };
 struct editor_state es;
 
@@ -94,7 +106,7 @@ void editor_del_char() {
 void editor_open(char *filename) {
     FILE *f = fopen(filename, "r");
     if (!f) {
-        screen_die("could not open file", 1);;
+        screen_die("could not open file", 1);
     }
 
     char *curr = NULL;
@@ -108,7 +120,27 @@ void editor_open(char *filename) {
         editor_insert_line(curr, (size_t)read, es.len);
     }
 
+    // set the filename
+    es.filename = malloc(strlen(filename) + 1);
+    strcpy(es.filename, filename);
+
     free(curr);
+    fclose(f);
+}
+
+void editor_write(char *filename) {
+    FILE *f = fopen(filename, "w");
+
+    if (!f) {
+        screen_die("could not open file for writing", 1);
+    }
+
+    // write the lines
+    for (int i = 0; i < es.len; i++) {
+        fputs(es.lines[i].s, f);
+        fputc('\n', f);
+    }
+
     fclose(f);
 }
 
@@ -243,6 +275,17 @@ void screen_input() {
         case KEY_CTRL('q'):
             screen_shutdown();
             exit(0);
+            break;
+
+        case KEY_CTRL('s'):
+            if (es.filename == NULL) {
+                screen_pause();
+                printf("Please input a filename to write: ");
+                size_t len = 0;
+                getline(&es.filename, &len, stdin);
+                screen_resume();
+            }
+            editor_write(es.filename);
             break;
 
         case KEY_BACKSPACE:
