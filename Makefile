@@ -5,7 +5,7 @@ jet: jet.c
 	$(CC) jet.c $(ARGS) $(LIBS)
 
 debug: jet.c
-	$(CC) -g $(ARGS) $(LIBS)
+	$(CC) jet.c -g $(ARGS) $(LIBS)
 
 clean:
 	rm -rf jet
