@@ -220,7 +220,7 @@ void screen_getfilename() {
 
     echo();
     char str[80];
-    getstr(str);
+    wgetstr(screen.statusbar, str);
 
     if (strlen(str) > 0) {
         es.filename = realloc(es.filename, strlen(str) + 1);
