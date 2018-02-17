@@ -49,6 +49,13 @@ struct editor_state {
 };
 struct editor_state es;
 
+struct screen_state {
+    WINDOW *buffer;
+    WINDOW *statusbar;
+    WINDOW *messagebox;
+};
+struct screen_state screen;
+
 void editor_trim_line(line *l, int len) {
     if (es.x < l->len) {
         l->len -= len;
@@ -203,18 +210,37 @@ void editor_move(int key) {
     }
 }
 
+void screen_getfilename() {
+    mvwprintw(screen.statusbar, 0, 0, "Filename to write ");
+    if (es.filename != NULL) {
+        wprintw(screen.statusbar, "(%s) ", es.filename);
+    }
+    wprintw(screen.statusbar, ": ");
+    wrefresh(screen.statusbar);
+
+    echo();
+    char str[80];
+    wgetstr(screen.statusbar, str);
+
+    if (strlen(str) > 0) {
+        es.filename = realloc(es.filename, strlen(str) + 1);
+        strcpy(es.filename, str);
+    }
+    noecho();
+}
+
 void screen_draw_lines() {
-    for (int y = 0; y < getmaxy(stdscr); y++) {
-        move(y, 0);
+    for (int y = 0; y < es.maxy; y++) {
+        wmove(screen.buffer, y, 0);
         if (y + es.sy < es.len) {
             line l = es.lines[y + es.sy];
             int x = 0;
             while (x < es.maxx && x < l.len - es.sx) {
-                addch((chtype)l.s[x + es.sx]);
+                waddch(screen.buffer, (chtype)l.s[x + es.sx]);
                 x++;
             }
         } else {
-            addch('~');
+            waddch(screen.buffer, '~');
         }
     }
 }
@@ -224,7 +250,7 @@ void screen_update() {
 
     // clear the screen and move cursor to top left
     erase();
-    getyx(stdscr, y, x);
+    getyx(screen.buffer, y, x);
     move(0, 0);
 
     // scroll if needed
@@ -243,9 +269,16 @@ void screen_update() {
     // draw text
     screen_draw_lines();
 
+    // draw status bar
+    mvwaddch(screen.statusbar, 0, 0, (chtype)'a');
+
     // move cursor back to current location
-    move(es.y - es.sy, es.x - es.sx);
+    wmove(screen.buffer, es.y - es.sy, es.x - es.sx);
+
+    // refresh windows
     refresh();
+    wrefresh(screen.statusbar);
+    wrefresh(screen.buffer);
 }
 
 int screen_is_printable(int c) {
@@ -278,13 +311,7 @@ void screen_input() {
             break;
 
         case KEY_CTRL('s'):
-            if (es.filename == NULL) {
-                screen_pause();
-                printf("Please input a filename to write: ");
-                size_t len = 0;
-                getline(&es.filename, &len, stdin);
-                screen_resume();
-            }
+            screen_getfilename();
             editor_write(es.filename);
             break;
 
@@ -320,9 +347,14 @@ int main(int argc, char *argv[]) {
     es.y = es.x = 0;
     es.sy = es.sx = 0;
     getmaxyx(stdscr, es.maxy, es.maxx);
+    es.maxy--;
     es.len = 0;
     es.lines = NULL;
     set_tabsize(TABSTOP);
+
+    // set up screen state
+    screen.buffer = newwin(es.maxy, es.maxx, 0, 0);
+    screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
 
     // open file
     if (argc > 1) {
