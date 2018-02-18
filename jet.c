@@ -53,6 +53,7 @@ struct screen_state {
     WINDOW *buffer;
     WINDOW *statusbar;
     WINDOW *messagebox;
+    WINDOW *linenumbers;
     int screeny, screenx;
 };
 struct screen_state screen;
@@ -246,8 +247,6 @@ void screen_draw_lines() {
                 waddch(screen.buffer, (chtype)l.s[x + es.sx]);
                 x++;
             }
-        } else {
-            waddch(screen.buffer, '~');
         }
     }
 }
@@ -270,6 +269,16 @@ void screen_update() {
         es.sx = es.x - es.maxx + 1;
     }
 
+    // draw line numbers
+    werase(screen.linenumbers);
+    for (int y = 0; y < es.maxy; y++) {
+        if (y + es.sy < es.len) {
+            mvwprintw(screen.linenumbers, y, 0, "%3d ", y + es.sy + 1);
+        } else {
+            mvwaddch(screen.linenumbers, y, 0, '~');
+        }
+    }
+
     // draw text
     screen_draw_lines();
 
@@ -290,6 +299,7 @@ void screen_update() {
     // refresh windows
     refresh();
     wrefresh(screen.statusbar);
+    wrefresh(screen.linenumbers);
     wrefresh(screen.buffer);
 }
 
@@ -366,7 +376,8 @@ int main(int argc, char *argv[]) {
     set_tabsize(TABSTOP);
 
     // set up screen state
-    screen.buffer = newwin(es.maxy, es.maxx, 0, 0);
+    screen.buffer = newwin(es.maxy, es.maxx, 0, 4);
+    screen.linenumbers = newwin(es.maxy, 4, 0, 0);
     screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
     getmaxyx(stdscr, screen.screeny, screen.screenx);
 
