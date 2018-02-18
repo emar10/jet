@@ -349,6 +349,12 @@ void screen_input() {
             es.x = 0;
             break;
 
+        case '\t':
+            for (int i = 0; i < 4; i++) {
+                editor_insert_char(' ');
+            }
+            break;
+
         default:
             if (screen_is_printable(c)) {
                 editor_insert_char(c);
