@@ -1,5 +1,4 @@
-/*
- * ned.c
+/** ned.c
  * Main file. Initializes ncurses window and draws text from a file to it.
  */
 #define _GNU_SOURCE
@@ -46,6 +45,7 @@ struct editor_state {
     int len;
     line *lines;
     char *filename;
+    int dirty;
 };
 struct editor_state es;
 
@@ -53,6 +53,8 @@ struct screen_state {
     WINDOW *buffer;
     WINDOW *statusbar;
     WINDOW *messagebox;
+    WINDOW *linenumbers;
+    int screeny, screenx;
 };
 struct screen_state screen;
 
@@ -81,6 +83,7 @@ void editor_insert_line(char *s, size_t len, int y)  {
 
     es.len++;
     es.y++;
+    es.dirty = TRUE;
 }
 
 void editor_insert_char(int c) {
@@ -89,6 +92,7 @@ void editor_insert_char(int c) {
     es.lines[es.y].len++;
     es.lines[es.y].s[es.x] = c;
     es.x++;
+    es.dirty = TRUE;
 }
 
 void editor_del_char() {
@@ -108,6 +112,8 @@ void editor_del_char() {
         es.len--;
         es.y--;
     }
+
+    es.dirty = TRUE;
 }
 
 void editor_open(char *filename) {
@@ -133,6 +139,7 @@ void editor_open(char *filename) {
 
     free(curr);
     fclose(f);
+    es.dirty = FALSE;
 }
 
 void editor_write(char *filename) {
@@ -149,6 +156,7 @@ void editor_write(char *filename) {
     }
 
     fclose(f);
+    es.dirty = FALSE;
 }
 
 void editor_move(int key) {
@@ -239,18 +247,13 @@ void screen_draw_lines() {
                 waddch(screen.buffer, (chtype)l.s[x + es.sx]);
                 x++;
             }
-        } else {
-            waddch(screen.buffer, '~');
         }
     }
 }
 
 void screen_update() {
-    int y, x;
-
     // clear the screen and move cursor to top left
-    erase();
-    getyx(screen.buffer, y, x);
+    werase(screen.buffer);
     move(0, 0);
 
     // scroll if needed
@@ -266,11 +269,29 @@ void screen_update() {
         es.sx = es.x - es.maxx + 1;
     }
 
+    // draw line numbers
+    werase(screen.linenumbers);
+    for (int y = 0; y < es.maxy; y++) {
+        if (y + es.sy < es.len) {
+            mvwprintw(screen.linenumbers, y, 0, "%3d ", y + es.sy + 1);
+        } else {
+            mvwaddch(screen.linenumbers, y, 0, '~');
+        }
+    }
+
     // draw text
     screen_draw_lines();
 
     // draw status bar
-    mvwaddch(screen.statusbar, 0, 0, (chtype)'a');
+    werase(screen.statusbar);
+
+    char left[screen.screenx];
+    char right[screen.screenx];
+
+    sprintf(left, " %s%s", es.filename != NULL ? es.filename : "<No File>", es.dirty ? " [!] " : "");
+    sprintf(right, " %d/%d ", es.y + 1, es.len);
+
+    mvwprintw(screen.statusbar, 0, 0, "%.*s%*s", screen.screenx - strlen(left), left, screen.screenx - strlen(left), right);
 
     // move cursor back to current location
     wmove(screen.buffer, es.y - es.sy, es.x - es.sx);
@@ -278,6 +299,7 @@ void screen_update() {
     // refresh windows
     refresh();
     wrefresh(screen.statusbar);
+    wrefresh(screen.linenumbers);
     wrefresh(screen.buffer);
 }
 
@@ -327,6 +349,12 @@ void screen_input() {
             es.x = 0;
             break;
 
+        case '\t':
+            for (int i = 0; i < 4; i++) {
+                editor_insert_char(' ');
+            }
+            break;
+
         default:
             if (screen_is_printable(c)) {
                 editor_insert_char(c);
@@ -350,11 +378,14 @@ int main(int argc, char *argv[]) {
     es.maxy--;
     es.len = 0;
     es.lines = NULL;
+    es.dirty = FALSE;
     set_tabsize(TABSTOP);
 
     // set up screen state
-    screen.buffer = newwin(es.maxy, es.maxx, 0, 0);
+    screen.buffer = newwin(es.maxy, es.maxx, 0, 4);
+    screen.linenumbers = newwin(es.maxy, 4, 0, 0);
     screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
+    getmaxyx(stdscr, screen.screeny, screen.screenx);
 
     // open file
     if (argc > 1) {
@@ -364,6 +395,7 @@ int main(int argc, char *argv[]) {
     // add blank line if no args/file is empty
     if (es.len == 0) {
         editor_insert_line("", 0, 0);
+        es.dirty = FALSE;
     }
 
     // move cursor back to start
