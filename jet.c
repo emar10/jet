@@ -53,6 +53,7 @@ struct screen_state {
     WINDOW *buffer;
     WINDOW *statusbar;
     WINDOW *messagebox;
+    int screeny, screenx;
 };
 struct screen_state screen;
 
@@ -252,11 +253,8 @@ void screen_draw_lines() {
 }
 
 void screen_update() {
-    int y, x;
-
     // clear the screen and move cursor to top left
-    erase();
-    getyx(screen.buffer, y, x);
+    werase(screen.buffer);
     move(0, 0);
 
     // scroll if needed
@@ -276,9 +274,15 @@ void screen_update() {
     screen_draw_lines();
 
     // draw status bar
-    char *fname = es.filename != NULL ? es.filename : "<No File>";
-    char *dirty = es.dirty ? " [!] " : "";
-    mvwprintw(screen.statusbar, 0, 0, "%s%s", fname, dirty);
+    werase(screen.statusbar);
+
+    char left[screen.screenx];
+    char right[screen.screenx];
+
+    sprintf(left, " %s%s", es.filename != NULL ? es.filename : "<No File>", es.dirty ? " [!] " : "");
+    sprintf(right, " %d/%d ", es.y + 1, es.len);
+
+    mvwprintw(screen.statusbar, 0, 0, "%.*s%*s", screen.screenx - strlen(left), left, screen.screenx - strlen(left), right);
 
     // move cursor back to current location
     wmove(screen.buffer, es.y - es.sy, es.x - es.sx);
@@ -364,6 +368,7 @@ int main(int argc, char *argv[]) {
     // set up screen state
     screen.buffer = newwin(es.maxy, es.maxx, 0, 0);
     screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
+    getmaxyx(stdscr, screen.screeny, screen.screenx);
 
     // open file
     if (argc > 1) {
