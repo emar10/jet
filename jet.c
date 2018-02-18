@@ -1,5 +1,4 @@
-/*
- * ned.c
+/** ned.c
  * Main file. Initializes ncurses window and draws text from a file to it.
  */
 #define _GNU_SOURCE
@@ -46,6 +45,7 @@ struct editor_state {
     int len;
     line *lines;
     char *filename;
+    int dirty;
 };
 struct editor_state es;
 
@@ -81,6 +81,7 @@ void editor_insert_line(char *s, size_t len, int y)  {
 
     es.len++;
     es.y++;
+    es.dirty = TRUE;
 }
 
 void editor_insert_char(int c) {
@@ -89,6 +90,7 @@ void editor_insert_char(int c) {
     es.lines[es.y].len++;
     es.lines[es.y].s[es.x] = c;
     es.x++;
+    es.dirty = TRUE;
 }
 
 void editor_del_char() {
@@ -108,6 +110,8 @@ void editor_del_char() {
         es.len--;
         es.y--;
     }
+
+    es.dirty = TRUE;
 }
 
 void editor_open(char *filename) {
@@ -133,6 +137,7 @@ void editor_open(char *filename) {
 
     free(curr);
     fclose(f);
+    es.dirty = FALSE;
 }
 
 void editor_write(char *filename) {
@@ -149,6 +154,7 @@ void editor_write(char *filename) {
     }
 
     fclose(f);
+    es.dirty = FALSE;
 }
 
 void editor_move(int key) {
@@ -270,7 +276,9 @@ void screen_update() {
     screen_draw_lines();
 
     // draw status bar
-    mvwaddch(screen.statusbar, 0, 0, (chtype)'a');
+    char *fname = es.filename != NULL ? es.filename : "<No File>";
+    char *dirty = es.dirty ? " [!] " : "";
+    mvwprintw(screen.statusbar, 0, 0, "%s%s", fname, dirty);
 
     // move cursor back to current location
     wmove(screen.buffer, es.y - es.sy, es.x - es.sx);
@@ -350,6 +358,7 @@ int main(int argc, char *argv[]) {
     es.maxy--;
     es.len = 0;
     es.lines = NULL;
+    es.dirty = FALSE;
     set_tabsize(TABSTOP);
 
     // set up screen state
@@ -364,6 +373,7 @@ int main(int argc, char *argv[]) {
     // add blank line if no args/file is empty
     if (es.len == 0) {
         editor_insert_line("", 0, 0);
+        es.dirty = FALSE;
     }
 
     // move cursor back to start
