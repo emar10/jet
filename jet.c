@@ -392,6 +392,7 @@ int main(int argc, char *argv[]) {
     es.sy = es.sx = 0;
     getmaxyx(stdscr, es.maxy, es.maxx);
     es.maxy--;
+    es.maxx -= 4;
     es.len = 0;
     es.lines = NULL;
     es.dirty = FALSE;
