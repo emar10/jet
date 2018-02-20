@@ -104,7 +104,7 @@ void editor_del_char() {
         l->len--;
     } else if (es.y > 0) {  // don't delete lines[0] pls
         line *prev = &es.lines[es.y - 1];
-        prev->s = realloc(prev->s, prev->len + l->len);
+        prev->s = realloc(prev->s, prev->len + l->len + 1);
         strcat(prev->s, l->s);
         es.x = prev->len;
         prev->len += l->len;
@@ -218,23 +218,37 @@ void editor_move(int key) {
     }
 }
 
-void screen_getfilename() {
-    mvwprintw(screen.statusbar, 0, 0, "Filename to write ");
-    if (es.filename != NULL) {
-        wprintw(screen.statusbar, "(%s) ", es.filename);
-    }
-    wprintw(screen.statusbar, ": ");
-    wrefresh(screen.statusbar);
+/* spawn in a messagebox window of the desired height */
+
+
+/* ask for a line of text from the user with the given prompt string */
+void screen_read_message(char *readto, const char *prompt) {
+    screen.messagebox = newwin(1, screen.screenx / 2, screen.screeny - 2, screen.screenx / 4);
+    wattron(screen.messagebox, A_STANDOUT);
+    mvwprintw(screen.messagebox, 0, 0, "%s ", prompt);
+    wrefresh(screen.messagebox);
 
     echo();
-    char str[80];
-    wgetstr(screen.statusbar, str);
+    wgetstr(screen.messagebox, readto);
 
-    if (strlen(str) > 0) {
-        es.filename = realloc(es.filename, strlen(str) + 1);
-        strcpy(es.filename, str);
-    }
     noecho();
+    //wrefresh(screen.buffer);
+    delwin(screen.messagebox);
+    screen.messagebox = NULL;
+}
+
+void screen_getfilename() {
+    char prompt[80];
+    char newname[80];
+    int isnull = es.filename == NULL;
+    sprintf(prompt, "Filename to write%s%s%s:", isnull ? "" : "(", isnull ? "" : es.filename, isnull ? "" : ")");
+
+    screen_read_message(newname, prompt);
+
+    if (strlen(newname) > 0) {
+        es.filename = realloc(es.filename, strlen(newname) + 1);
+        strcpy(es.filename, newname);
+    }
 }
 
 void screen_draw_lines() {
@@ -334,7 +348,9 @@ void screen_input() {
 
         case KEY_CTRL('s'):
             screen_getfilename();
-            editor_write(es.filename);
+            if (es.filename != NULL) {
+                editor_write(es.filename);
+            }
             break;
 
         case KEY_BACKSPACE:
@@ -385,6 +401,7 @@ int main(int argc, char *argv[]) {
     screen.buffer = newwin(es.maxy, es.maxx, 0, 4);
     screen.linenumbers = newwin(es.maxy, 4, 0, 0);
     screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
+    screen.messagebox = NULL;
     getmaxyx(stdscr, screen.screeny, screen.screenx);
 
     // open file
