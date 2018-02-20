@@ -218,14 +218,12 @@ void editor_move(int key) {
     }
 }
 
-/* spawn in a messagebox window of the desired height */
-
-
 /* ask for a line of text from the user with the given prompt string */
 void screen_read_message(char *readto, const char *prompt) {
-    screen.messagebox = newwin(1, screen.screenx / 2, screen.screeny - 2, screen.screenx / 4);
-    wattron(screen.messagebox, A_STANDOUT);
-    mvwprintw(screen.messagebox, 0, 0, "%s ", prompt);
+    screen.messagebox = newwin(1, screen.screenx, screen.screeny - 2, 0);
+    wbkgd(screen.messagebox, A_STANDOUT);
+
+    mvwprintw(screen.messagebox, 0, 0, "%s", prompt);
     wrefresh(screen.messagebox);
 
     echo();
@@ -241,7 +239,7 @@ void screen_getfilename() {
     char prompt[80];
     char newname[80];
     int isnull = es.filename == NULL;
-    sprintf(prompt, "Filename to write%s%s%s:", isnull ? "" : "(", isnull ? "" : es.filename, isnull ? "" : ")");
+    sprintf(prompt, "Filename to write%s%s%s: ", isnull ? "" : "(", isnull ? "" : es.filename, isnull ? "" : ")");
 
     screen_read_message(newname, prompt);
 
