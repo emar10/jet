@@ -104,7 +104,7 @@ void editor_del_char() {
         l->len--;
     } else if (es.y > 0) {  // don't delete lines[0] pls
         line *prev = &es.lines[es.y - 1];
-        prev->s = realloc(prev->s, prev->len + l->len);
+        prev->s = realloc(prev->s, prev->len + l->len + 1);
         strcat(prev->s, l->s);
         es.x = prev->len;
         prev->len += l->len;
@@ -218,23 +218,51 @@ void editor_move(int key) {
     }
 }
 
-void screen_getfilename() {
-    mvwprintw(screen.statusbar, 0, 0, "Filename to write ");
-    if (es.filename != NULL) {
-        wprintw(screen.statusbar, "(%s) ", es.filename);
+/* display a message */
+void screen_message(const char *message) {
+    if (screen.messagebox != NULL) {
+        delwin(screen.messagebox);
     }
-    wprintw(screen.statusbar, ": ");
-    wrefresh(screen.statusbar);
+    screen.messagebox = newwin(1, screen.screenx, screen.screeny - 1, 0);
+    wbkgd(screen.messagebox, A_STANDOUT);
+
+    mvwprintw(screen.messagebox, 0, 0, "%s%*s", message, screen.screenx - strlen(message), "Ctrl-X to dismiss");
+    wrefresh(screen.messagebox);    wbkgd(screen.messagebox, A_STANDOUT);
+}
+
+/* ask for a line of text from the user with the given prompt string */
+void screen_read_message(char *readto, const char *prompt) {
+    if (screen.messagebox != NULL) {
+        delwin(screen.messagebox);
+
+    }
+    screen.messagebox = newwin(1, screen.screenx, screen.screeny - 1, 0);
+    wbkgd(screen.messagebox, A_STANDOUT);
+
+    mvwprintw(screen.messagebox, 0, 0, "%s", prompt);
+    wrefresh(screen.messagebox);
 
     echo();
-    char str[80];
-    wgetstr(screen.statusbar, str);
+    wgetstr(screen.messagebox, readto);
 
-    if (strlen(str) > 0) {
-        es.filename = realloc(es.filename, strlen(str) + 1);
-        strcpy(es.filename, str);
-    }
     noecho();
+    //wrefresh(screen.buffer);
+    delwin(screen.messagebox);
+    screen.messagebox = NULL;
+}
+
+void screen_getfilename() {
+    char prompt[80];
+    char newname[80];
+    int isnull = es.filename == NULL;
+    sprintf(prompt, "Filename to write%s%s%s: ", isnull ? "" : "(", isnull ? "" : es.filename, isnull ? "" : ")");
+
+    screen_read_message(newname, prompt);
+
+    if (strlen(newname) > 0) {
+        es.filename = realloc(es.filename, strlen(newname) + 1);
+        strcpy(es.filename, newname);
+    }
 }
 
 void screen_draw_lines() {
@@ -299,6 +327,10 @@ void screen_update() {
     // refresh windows
     refresh();
     wrefresh(screen.statusbar);
+    if (screen.messagebox != NULL) {
+        touchwin(screen.messagebox);
+        wrefresh(screen.messagebox);
+    }
     wrefresh(screen.linenumbers);
     wrefresh(screen.buffer);
 }
@@ -334,7 +366,20 @@ void screen_input() {
 
         case KEY_CTRL('s'):
             screen_getfilename();
-            editor_write(es.filename);
+            if (es.filename != NULL) {
+                editor_write(es.filename);
+            }
+            break;
+
+        case KEY_CTRL('h'):
+            screen_message("Ctrl-S to save buffer, Ctrl-Q to quit");
+            break;
+
+        case KEY_CTRL('x'):
+            if (screen.messagebox != NULL) {
+                delwin(screen.messagebox);
+                screen.messagebox = NULL;
+            }
             break;
 
         case KEY_BACKSPACE:
@@ -376,6 +421,7 @@ int main(int argc, char *argv[]) {
     es.sy = es.sx = 0;
     getmaxyx(stdscr, es.maxy, es.maxx);
     es.maxy--;
+    es.maxx -= 4;
     es.len = 0;
     es.lines = NULL;
     es.dirty = FALSE;
@@ -384,7 +430,8 @@ int main(int argc, char *argv[]) {
     // set up screen state
     screen.buffer = newwin(es.maxy, es.maxx, 0, 4);
     screen.linenumbers = newwin(es.maxy, 4, 0, 0);
-    screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
+    screen.statusbar = newwin(1, screen.screeny, es.maxy, 0);
+    screen.messagebox = NULL;
     getmaxyx(stdscr, screen.screeny, screen.screenx);
 
     // open file
