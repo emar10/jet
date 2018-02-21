@@ -218,9 +218,25 @@ void editor_move(int key) {
     }
 }
 
+/* display a message */
+void screen_message(const char *message) {
+    if (screen.messagebox != NULL) {
+        delwin(screen.messagebox);
+    }
+    screen.messagebox = newwin(1, screen.screenx, screen.screeny - 1, 0);
+    wbkgd(screen.messagebox, A_STANDOUT);
+
+    mvwprintw(screen.messagebox, 0, 0, "%s%*s", message, screen.screenx - strlen(message), "Ctrl-X to dismiss");
+    wrefresh(screen.messagebox);    wbkgd(screen.messagebox, A_STANDOUT);
+}
+
 /* ask for a line of text from the user with the given prompt string */
 void screen_read_message(char *readto, const char *prompt) {
-    screen.messagebox = newwin(1, screen.screenx, screen.screeny - 2, 0);
+    if (screen.messagebox != NULL) {
+        delwin(screen.messagebox);
+
+    }
+    screen.messagebox = newwin(1, screen.screenx, screen.screeny - 1, 0);
     wbkgd(screen.messagebox, A_STANDOUT);
 
     mvwprintw(screen.messagebox, 0, 0, "%s", prompt);
@@ -311,6 +327,10 @@ void screen_update() {
     // refresh windows
     refresh();
     wrefresh(screen.statusbar);
+    if (screen.messagebox != NULL) {
+        touchwin(screen.messagebox);
+        wrefresh(screen.messagebox);
+    }
     wrefresh(screen.linenumbers);
     wrefresh(screen.buffer);
 }
@@ -348,6 +368,17 @@ void screen_input() {
             screen_getfilename();
             if (es.filename != NULL) {
                 editor_write(es.filename);
+            }
+            break;
+
+        case KEY_CTRL('h'):
+            screen_message("Ctrl-S to save buffer, Ctrl-Q to quit");
+            break;
+
+        case KEY_CTRL('x'):
+            if (screen.messagebox != NULL) {
+                delwin(screen.messagebox);
+                screen.messagebox = NULL;
             }
             break;
 
@@ -399,7 +430,7 @@ int main(int argc, char *argv[]) {
     // set up screen state
     screen.buffer = newwin(es.maxy, es.maxx, 0, 4);
     screen.linenumbers = newwin(es.maxy, 4, 0, 0);
-    screen.statusbar = newwin(1, es.maxx, es.maxy, 0);
+    screen.statusbar = newwin(1, screen.screeny, es.maxy, 0);
     screen.messagebox = NULL;
     getmaxyx(stdscr, screen.screeny, screen.screenx);
 
