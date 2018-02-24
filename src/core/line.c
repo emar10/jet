@@ -18,7 +18,7 @@ line *empty_line() {
 
     l->len = 0;
 
-    return &l;
+    return l;
 }
 
 /* cleans up the line */
