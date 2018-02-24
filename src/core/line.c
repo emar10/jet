@@ -10,7 +10,7 @@
 #include "line.h"
 
 /* creates a new, empty line */
-line *empty_line() {
+line *newline() {
     line *l = malloc(sizeof(line));
 
     l->s = malloc(1);
@@ -22,9 +22,9 @@ line *empty_line() {
 }
 
 /* cleans up the line */
-void del_line(line *l) {
-    free(l->s);
-    free(l);
+void delline(line *l) {
+    free(&l->s);
+    free(&l);
 }
 
 /* grow or shrink a line */

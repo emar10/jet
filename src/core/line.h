@@ -10,10 +10,10 @@ typedef struct line {
 } line;
 
 /* create a new empty line */
-line *empty_line();
+line *newline();
 
 /* free a line */
-void del_line(line *l);
+void delline(line *l);
 
 /* grow or shrink a line */
 void lresize(line *l, int len);
