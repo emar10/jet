@@ -11,14 +11,14 @@
 
 /* creates a new, empty line */
 line *empty_line() {
-    line *l;
+    line *l = malloc(sizeof(line));
 
     l->s = malloc(1);
     l->s[0] = '\0';
 
     l->len = 0;
 
-    return l;
+    return &l;
 }
 
 /* cleans up the line */
