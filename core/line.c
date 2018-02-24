@@ -10,19 +10,21 @@
 #include "line.h"
 
 /* creates a new, empty line */
-*line empty_line() {
-    *line l;
+line *empty_line() {
+    line *l;
 
     l->s = malloc(1);
     l->s[0] = '\0';
 
     l->len = 0;
+
+    return l;
 }
 
 /* cleans up the line */
 void del_line(line *l) {
-    free(line->s);
-    free(line);
+    free(l->s);
+    free(l);
 }
 
 /* grow or shrink a line */
@@ -57,5 +59,14 @@ void laddstr(line *l, const char *s, int len, int i) {
 
     // insert the string
     memcpy(&l->s[i], s, len);
+}
+
+/* delete the character at the given index */
+void ldelch(line *l, int i) {
+    if (i < l->len) {
+        memmove(&l->s[i], &l->s[i + 1], l->len - i - 1);
+    }
+
+    lresize(l, l->len - 1);
 }
 

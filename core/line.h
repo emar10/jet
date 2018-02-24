@@ -10,7 +10,7 @@ typedef struct line {
 } line;
 
 /* create a new empty line */
-*line empty_line();
+line *empty_line();
 
 /* free a line */
 void del_line(line *l);
@@ -23,4 +23,7 @@ void laddch(line *l, const char c, int i);
 
 /* add a string to the line */
 void laddstr(line *l, const char *s, int len, int i);
+
+/* remove the character at the given index */
+void ldelch(line *l, int i);
 
