@@ -4,6 +4,9 @@
  * Copyright (c) 2018 Ethan Martin
  */
 
+#ifndef LINE_H
+#define LINE_H
+
 typedef struct line {
     int len;
     char *s;
@@ -26,4 +29,6 @@ void laddstr(line *l, const char *s, int len, int i);
 
 /* remove the character at the given index */
 void ldelch(line *l, int i);
+
+#endif
 

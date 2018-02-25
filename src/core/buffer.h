@@ -4,6 +4,8 @@
  * Copyright (c) 2018 Ethan Martin
  */
 
+#ifndef BUFFER_H
+#define BUFFER_H
 #include <stdbool.h>
 
 #include "line.h"
@@ -60,4 +62,6 @@ void bmove(buffer *b, enum direction dir);
 
 /* name the buffer */
 void bname(buffer *b, const char *name);
+
+#endif
 

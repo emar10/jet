@@ -4,6 +4,9 @@
  * Copyright (c) 2018 Ethan Martin
  */
 
+#ifndef FILE_H
+#define FILE_H
+
 #include "buffer.h"
 
 /* opens a file using the given filename, and parses it into a buffer */
@@ -15,3 +18,6 @@ int writebufto(buffer *b, const char *filename);
 
 /* same as above, using filename in the buffer */
 int writebuf(buffer *b);
+
+#endif
+
