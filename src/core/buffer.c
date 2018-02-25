@@ -49,6 +49,7 @@ void baddline(buffer *b, int y) {
     // insert the line
     b->lines[y] = newline();
     b->len++;
+    b->dirty = true;
 }
 
 /* remove a line */
@@ -61,21 +62,33 @@ void bdelline(buffer *b, int y) {
     if (y < b->len) {
         memmove(&b->lines[y], &b->lines[y + 1], sizeof(line*) * (b->len - y));
     }
+    b->dirty = true;
 }
 
 /* insert a character */
 void baddch(buffer *b, const char c, int y, int x) {
     laddch(b->lines[y], c, x);
+    b->dirty = true;
 }
 
 /* insert a string */
 void baddstr(buffer *b, const char *s, int len, int y, int x) {
     laddstr(b->lines[y], s, len, x);
+    b->dirty = true;
+}
+
+/* insert an existing line at the end of the buffer */
+void bappendline(buffer *b, line *l) {
+    b->lines = realloc(b->lines, sizeof(line**) * b->len + 1);
+    b->lines[b->len] = l;
+    b->len++;
+    b->dirty = true;
 }
 
 /* remove a character */
 void bdelch(buffer *b, int y, int x) {
     ldelch(b->lines[y], x);
+    b->dirty = true;
 }
 
 /* insert a line break */
@@ -91,6 +104,7 @@ void baddbreak(buffer *b, int y, int x) {
         laddstr(new, &prev->s[x], prev->len - x, 0);
         lresize(prev, x);
     }
+    b->dirty = true;
 }
 
 /* remove a line break */
@@ -110,6 +124,7 @@ void bdelbreak(buffer *b, int y) {
 
     // remove the current line
     bdelline(b, y);
+    b->dirty = true;
 }
 
 /* move to the given location */

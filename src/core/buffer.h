@@ -40,6 +40,9 @@ void baddch(buffer *b, const char c, int y, int x);
 /* insert a string at the given location */
 void baddstr(buffer *b, const char *s, int len, int y, int x);
 
+/* insert an existing line at the end of the buffer */
+void bappendline(buffer *b, line *l);
+
 /* remove the character at the given location */
 void bdelch(buffer *b, int y, int x);
 
