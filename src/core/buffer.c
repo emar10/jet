@@ -5,6 +5,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "buffer.h"
 
@@ -12,7 +13,6 @@
 buffer *newbuf() {
     buffer *b = malloc(sizeof(buffer));
     b->y = b->x = 0;
-    b->sy = b->sx = 0;
     b->len = 0;
     b->lines = NULL;
     b->name = NULL;
@@ -25,7 +25,7 @@ buffer *newbuf() {
 void delbuf(buffer *b) {
     // delete the lines
     for (int i = 0; i < b->len; i++) {
-        delline(&b->lines[i]);
+        delline(b->lines[i]);
     }
     free(b->lines);
 
@@ -38,46 +38,125 @@ void delbuf(buffer *b) {
 
 /* insert an empty line into the buffer */
 void baddline(buffer *b, int y) {
+    // make room for the line
+    b->lines = realloc(b->lines, sizeof(line*) * (b->len + 1));
 
+    // offset if needed
+    if (y < b->len) {
+        memmove(&b->lines[y + 1], &b->lines[y], sizeof(line*) * (b->len - y));
+    }
+
+    // insert the line
+    b->lines[y] = newline();
+    b->len++;
 }
 
 /* remove a line */
 void bdelline(buffer *b, int y) {
+    // remove the line
+    delline(b->lines[y]);
+    b->len--;
 
+    // move memory forward
+    if (y < b->len) {
+        memmove(&b->lines[y], &b->lines[y + 1], sizeof(line*) * (b->len - y));
+    }
 }
 
 /* insert a character */
-void baddchat(buffer *b, const char c, int y, int x) {
-
+void baddch(buffer *b, const char c, int y, int x) {
+    laddch(b->lines[y], c, x);
 }
 
 /* insert a string */
-void baddstrat(buffer *b, const char *s, int len, int y, int x) {
-
+void baddstr(buffer *b, const char *s, int len, int y, int x) {
+    laddstr(b->lines[y], s, len, x);
 }
 
 /* remove a character */
-void bdelchat(buffer *b, int y, int x) {
-
+void bdelch(buffer *b, int y, int x) {
+    ldelch(b->lines[y], x);
 }
 
 /* insert a line break */
-void baddbreak(buffer *b, int y) {
+void baddbreak(buffer *b, int y, int x) {
+    // insert blank line
+    baddline(b, y + 1);
 
+    // if needed, append string to new line and shorten previous
+    if (x < b->lines[y]->len) {
+        line *new = b->lines[y + 1];
+        line *prev = b->lines[y];
+
+        laddstr(new, &prev->s[x], prev->len - x, 0);
+        lresize(prev, x);
+    }
 }
 
 /* remove a line break */
 void bdelbreak(buffer *b, int y) {
+    // do nothing to top line
+    if (y == 0) {
+        return;
+    }
 
+    // if needed, append current to previous
+    if (b->lines[y]->len > 0) {
+        line *prev = b->lines[y - 1];
+        line *curr = b->lines[y];
+
+        laddstr(prev, curr->s, curr->len, prev->len);
+    }
+
+    // remove the current line
+    bdelline(b, y);
 }
 
 /* move to the given location */
 void bmoveto(buffer *b, int y, int x) {
+    // first choose y
+    if (y < 0) {
+        b->y = 0;
+    } else if (y > b->len - 1) {
+        b->y = b->len - 1;
+    } else {
+        b->y = y;
+    }
 
+    // then choose x
+    line *l = b->lines[b->y];
+    if (x < 0) {
+        b->x = 0;
+    } else if (x > l->len) {
+        b->x = l->len;
+    } else {
+        b->x = x;
+    }
 }
 
 /* move in the given direction */
 void bmove(buffer *b, enum direction dir) {
+    switch (dir) {
+        case UP:
+            bmoveto(b, b->y--, b->x);
+            break;
 
+        case DOWN:
+            bmoveto(b, b->y++, b->x);
+            break;
+
+        case LEFT:
+            bmoveto(b, b->y, b->x--);
+            break;
+
+        case RIGHT:
+            bmoveto(b, b->y, b->x++);
+    }
+}
+
+/* name the buffer */
+void bname(buffer *b, const char *name) {
+    b->name = realloc(b->name, strlen(name) + 1);
+    strcpy(b->name, name);
 }
 

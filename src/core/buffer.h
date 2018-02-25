@@ -12,7 +12,7 @@ typedef struct buffer {
     int y, x;
     int sy, sx;
     int len;
-    line *lines;
+    line **lines;
     char *name;
     bool dirty;
 } buffer;
@@ -35,16 +35,16 @@ void baddline(buffer *b, int y);
 void bdelline(buffer *b, int y);
 
 /* insert a character at the given location */
-void baddchat(buffer *b, const char c, int y, int x);
+void baddch(buffer *b, const char c, int y, int x);
 
 /* insert a string at the given location */
-void baddstrat(buffer *b, const char *s, int len, int y, int x);
+void baddstr(buffer *b, const char *s, int len, int y, int x);
 
 /* remove the character at the given location */
-void bdelchat(buffer *b, int y, int x);
+void bdelch(buffer *b, int y, int x);
 
 /* insert a line break */
-void baddbreak(buffer *b, int y);
+void baddbreak(buffer *b, int y, int x);
 
 /* remove a line break */
 void bdelbreak(buffer *b, int y);
@@ -54,3 +54,7 @@ void bmoveto(buffer *b, int y, int x);
 
 /* move in the given direction */
 void bmove(buffer *b, enum direction dir);
+
+/* name the buffer */
+void bname(buffer *b, const char *name);
+
