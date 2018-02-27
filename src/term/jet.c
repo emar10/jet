@@ -3,7 +3,6 @@
  * Ncurses Jet. For help, see README.md in the root directory.
  * Copyright (c) Ethan Martin
  */
-#define _GNU_SOURCE
 
 #include <ncurses.h>
 #include <stdlib.h>
@@ -92,6 +91,16 @@ void screen_getfilename() {
     }
 }
 
+void screen_open() {
+    char filename[80];
+
+    screen_read_message(filename, "Filename to open: ");
+
+    if (strlen(filename) > 0) {
+        buffer *b = readbuf(filename);
+    }
+}
+
 void screen_draw_lines() {
     for (int y = 0; y < s.maxy - 1; y++) {
         wmove(s.bufferwin, y, 0);
@@ -115,13 +124,13 @@ void screen_update() {
     if (s.b->y < s.y) {
         s.y = s.b->y;
     } else if (s.b->y >= s.y + s.maxy - 1) {
-        s.y = s.b->y - s.maxy - 1 + 1;
+        s.y = s.b->y - (s.maxy - 1) + 1;
     }
 
     if (s.b->x < s.x) {
         s.x = s.b->x;
     } else if (s.b->x >= s.x + s.maxx - 4) {
-        s.x = s.b->x - s.maxx - 4 + 1;
+        s.x = s.b->x - (s.maxx - 4) + 1;
     }
 
     // draw line numbers
@@ -210,6 +219,10 @@ void screen_input() {
             if (s.b->name != NULL) {
                 writebuf(s.b);
             }
+            break;
+
+        case KEY_CTRL('o'):
+            screen_open();
             break;
 
         case KEY_CTRL('h'):

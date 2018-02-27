@@ -23,8 +23,8 @@ line *newline() {
 
 /* cleans up the line */
 void delline(line *l) {
-    free(&l->s);
-    free(&l);
+    free(l->s);
+    free(l);
 }
 
 /* grow or shrink a line */

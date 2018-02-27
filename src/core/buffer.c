@@ -153,19 +153,19 @@ void bmoveto(buffer *b, int y, int x) {
 void bmove(buffer *b, enum direction dir) {
     switch (dir) {
         case UP:
-            bmoveto(b, b->y--, b->x);
+            bmoveto(b, b->y - 1, b->x);
             break;
 
         case DOWN:
-            bmoveto(b, b->y++, b->x);
+            bmoveto(b, b->y + 1, b->x);
             break;
 
         case LEFT:
-            bmoveto(b, b->y, b->x--);
+            bmoveto(b, b->y, b->x - 1);
             break;
 
         case RIGHT:
-            bmoveto(b, b->y, b->x++);
+            bmoveto(b, b->y, b->x + 1);
     }
 }
 
