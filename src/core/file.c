@@ -15,9 +15,15 @@
 buffer *readbuf(const char *filename) {
     buffer *b;
 
-    // if the file does not exist, return NULL
+    // create the buffer
+    b = newbuf();
+
+    // name the buffer
+    bname(b, filename);
+
+    // if the file does not exist, return empty
     if (access(filename, F_OK)) {
-        return NULL;
+        return b;
     }
 
     // otherwise, attempt to open
@@ -26,28 +32,25 @@ buffer *readbuf(const char *filename) {
         die("Failed to open file for reading", 1);
     }
 
-    // create the buffer
-    b = newbuf();
-
     // read lines to the buffer
-    char *curr = NULL;
-    size_t len;
-    ssize_t read;
-    while ((read = getline(&curr, &len, f)) != -1) {
-        while (curr[read - 1] == '\n' || curr[read - 1] == '\r') {
-            read--;
-            curr[read] = '\0';
+    char c;
+    char buf[1024];
+    buf[0] = '\0';
+    int i = 0;
+    line *l = newline();
+    do {
+        c = getc(f);
+        if (c == '\n' || c == EOF || i == 1023) {
+            bappendline(b, l);
+            l = newline();
+            i = 0;
+        } else {
+            laddch(l, c, i);
+            i++;
         }
-        line *l = newline();
-        laddstr(l, curr, read, 0);
-
-        bappendline(b, l);
-    }
-    free(curr);
+    } while (c != EOF);
     fclose(f);
 
-    // name the buffer
-    bname(b, filename);
     b->dirty = false;
 
     return b;

@@ -14,7 +14,22 @@
 
 #define KEY_CTRL(c) ((c)-96)
 
+struct screen_state {
+    WINDOW *bufferwin;
+    WINDOW *statusbar;
+    WINDOW *messagebox;
+    WINDOW *linenumbers;
+    buffer *b;
+    int maxy, maxx;
+    int y, x;
+};
+struct screen_state s;
+
 void screen_shutdown() {
+    delwin(s.bufferwin);
+    delwin(s.statusbar);
+    delwin(s.messagebox);
+    delwin(s.linenumbers);
     endwin();
 }
 
@@ -33,17 +48,6 @@ void screen_resume() {
     reset_prog_mode();
     refresh();
 }
-
-struct screen_state {
-    WINDOW *bufferwin;
-    WINDOW *statusbar;
-    WINDOW *messagebox;
-    WINDOW *linenumbers;
-    buffer *b;
-    int maxy, maxx;
-    int y, x;
-};
-struct screen_state s;
 
 /* display a message */
 void screen_message(const char *message) {
@@ -98,6 +102,9 @@ void screen_open() {
 
     if (strlen(filename) > 0) {
         buffer *b = readbuf(filename);
+        delbuf(s.b);
+        s.b = b;
+        s.y = s.x = 0;
     }
 }
 
@@ -211,6 +218,7 @@ void screen_input() {
 
         case KEY_CTRL('q'):
             screen_shutdown();
+            delbuf(s.b);
             exit(0);
             break;
 
@@ -297,6 +305,7 @@ int main(int argc, char *argv[]) {
     s.linenumbers = newwin(s.maxy - 1, 4, 0, 0);
     s.statusbar = newwin(1, s.maxx, s.maxy - 1, 0);
     s.messagebox = NULL;
+    s.y = s.x = 0;
 
     while (TRUE) {
         screen_update();
