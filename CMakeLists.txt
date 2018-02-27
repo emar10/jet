@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.0)
+
 set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses REQUIRED)
 
@@ -12,4 +14,4 @@ set(SOURCE_FILES src/term/jet.c
 
 add_executable(jet ${SOURCE_FILES})
 
-target_link_libraries(jet PRIVATE Curses)
+target_link_libraries(jet PRIVATE ncurses)
