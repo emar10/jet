@@ -15,6 +15,10 @@ rm -rf linux'''
       }
     }
     stage('Darwin') {
+      environment {
+        CC = '/opt/osxcross/bin/o64-clang'
+        CCXX = '/opt/osxcross/bin/o64-clang++'
+      }
       steps {
         sh '''mkdir darwin
 cmake -Bdarwin -H. -DCMAKE_SYSTEM_NAME=Darwin \\
