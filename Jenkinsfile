@@ -1,20 +1,29 @@
 pipeline {
   agent any
   stages {
-    stage('Build') {
+    stage('Linux') {
+      environment {
+        CC = 'gcc'
+      }
       steps {
-        sh '''cmake ./
-make clean
-make
-mv jet jet-linux
-make clean
-make CC=/opt/osxcross/bin/o64-clang
-mv jet jet-darwin'''
-        archiveArtifacts 'jet-*'
+        sh '''mkdir linux
+cmake -Blinux -H.
+cmake --build linux
+mv linux/jet jet-linux
+rm -rf linux'''
+        archiveArtifacts 'jet-linux'
       }
     }
-  }
-  environment {
-    CC = 'gcc'
+    stage('Darwin') {
+      steps {
+        sh '''mkdir darwin
+cmake -Bdarwin -H. -DCMAKE_SYSTEM_NAME=Darwin \\
+-DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CCXX
+cmake --build darwin
+mv darwin/jet jet-darwin
+rm -rf darwin'''
+        archiveArtifacts 'jet-darwin'
+      }
+    }
   }
 }
