@@ -4,6 +4,10 @@
  * Copyright (c) Ethan Martin
  */
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 1
+#define VERSION_PATCH 0
+
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
@@ -306,6 +310,11 @@ int main(int argc, char *argv[]) {
     s.statusbar = newwin(1, s.maxx, s.maxy - 1, 0);
     s.messagebox = NULL;
     s.y = s.x = 0;
+
+    // add a friendly welcome message
+    char message[80];
+    sprintf(message, "Welcome to Jet v%d.%d.%d! Use Ctrl-H to display help.", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    screen_message(message);
 
     while (TRUE) {
         screen_update();
