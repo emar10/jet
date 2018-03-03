@@ -34,13 +34,11 @@ buffer *readbuf(const char *filename) {
 
     // read lines to the buffer
     char c;
-    char buf[1024];
-    buf[0] = '\0';
     int i = 0;
     line *l = newline();
     do {
         c = getc(f);
-        if (c == '\n' || c == EOF || i == 1023) {
+        if (c == '\n') {
             bappendline(b, l);
             l = newline();
             i = 0;
