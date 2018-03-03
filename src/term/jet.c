@@ -229,7 +229,13 @@ void screen_input() {
         case KEY_CTRL('s'):
             screen_getfilename();
             if (s.b->name != NULL) {
-                writebuf(s.b);
+                if (writebuf(s.b) != -1) {
+                    screen_message("File successfully written.");
+                } else {
+                    screen_message("Failed to write file.");
+                }
+            } else {
+                screen_message("Save aborted.");
             }
             break;
 
@@ -238,7 +244,7 @@ void screen_input() {
             break;
 
         case KEY_CTRL('h'):
-            screen_message("Ctrl-S to save buffer, Ctrl-Q to quit");
+            screen_message("Ctrl-S to save buffer, Ctrl-O to open file, Ctrl-Q to quit");
             break;
 
         case KEY_CTRL('x'):
