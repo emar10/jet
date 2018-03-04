@@ -6,3 +6,9 @@ jet
 
 # debugging symbols
 *.dsym/
+
+# cmake
+CMakeFiles/
+CMakeCache.txt
+*.cmake
+Makefile
