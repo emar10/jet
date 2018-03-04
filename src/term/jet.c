@@ -10,6 +10,7 @@
 
 #include <ncurses.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "../core/jet.h"
@@ -97,6 +98,38 @@ void screen_getfilename() {
     if (strlen(newname) > 0) {
         bname(s.b, newname);
     }
+}
+
+bool screen_confirmquit() {
+    char response[80];
+    int len;
+    bool invalid;
+
+    do {
+        screen_read_message(response, "File has not been saved! Really quit? (y/N): ");
+        len = strlen(response);
+
+        invalid = false;
+        switch (len) {
+            case 0:
+                return false;
+
+            case 1:
+                if (response[0] == 'y' || response[0] == 'Y') {
+                    return true;
+                }
+                if (response[0] == 'n' || response[0] == 'N') {
+                    return false;
+                }
+                invalid = true;
+                break;
+
+            default:
+                invalid = true;
+                break;
+        }
+    } while (invalid);
+    return false;
 }
 
 void screen_open() {
@@ -221,9 +254,11 @@ void screen_input() {
             break;
 
         case KEY_CTRL('q'):
-            screen_shutdown();
-            delbuf(s.b);
-            exit(0);
+            if (!s.b->dirty || screen_confirmquit()) {
+                screen_shutdown();
+                delbuf(s.b);
+                exit(0);
+            }
             break;
 
         case KEY_CTRL('s'):
