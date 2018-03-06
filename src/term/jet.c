@@ -241,10 +241,13 @@ void screen_input() {
             bmove(s.b, LEFT);
             break;
         case KEY_PPAGE:
-            bmoveto(s.b, s.b->y - s.y, s.b->x);
+            bmoveto(s.b, s.b->y - (s.maxy - 1) - 1, s.b->x);
             break;
         case KEY_NPAGE:
-            bmoveto(s.b, s.b->y + s.y, s.b->x);
+            bmoveto(s.b, s.b->y + (s.maxy - 1) - 1, s.b->x);
+            if (s.b->y < s.b->len - 1) {
+                s.y = s.b->y;
+            }
             break;
         case KEY_HOME:
             bmoveto(s.b, s.b->y, 0);
