@@ -3,10 +3,10 @@ project(core)
 
 # build
 add_library(core_lib
-            include/buffer.h
-            include/file.h
-            include/line.h
-            include/jet.h
+            include/core/buffer.h
+            include/core/file.h
+            include/core/line.h
+            include/core/jet.h
             src/buffer.c
             src/file.c
             src/line.c)
