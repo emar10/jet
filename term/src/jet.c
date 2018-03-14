@@ -1,7 +1,7 @@
 /*
  * jet.c
  * Ncurses Jet. For help, see README.md in the root directory.
- * Copyright (c) Ethan Martin
+ * Copyright (c) 2018 Ethan Martin
  */
 
 #define VERSION_MAJOR 0
@@ -13,7 +13,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "../core/jet.h"
+#include <core/jet.h>
 
 #define TABSTOP 4
 

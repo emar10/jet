@@ -8,7 +8,7 @@
 #define BUFFER_H
 #include <stdbool.h>
 
-#include "line.h"
+#include <core/line.h>
 
 typedef struct buffer {
     int y, x;

@@ -1,8 +1,9 @@
 # binary
 jet
 
-# object files
+# build files
 *.o
+*.a
 
 # debugging symbols
 *.dsym/
