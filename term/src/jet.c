@@ -6,7 +6,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 0
+#define VERSION_PATCH 1
 
 #include <ncurses.h>
 #include <stdlib.h>
@@ -224,10 +224,28 @@ int screen_is_printable(int c) {
     }
 }
 
+void screen_resize() {
+    getmaxyx(stdscr, s.maxy, s.maxx);
+
+    // move and resize windows
+    wresize(s.bufferwin, s.maxy - 1, s.maxx - 4);
+    wresize(s.linenumbers, s.maxy - 1, 4);
+    wresize(s.statusbar, 1, s.maxx);
+    mvwin(s.statusbar, s.maxy - 1, 0);
+    if (s.messagebox != NULL) {
+        wresize(s.messagebox, 1, s.maxx);
+        mvwin(s.messagebox, s.maxy - 1, 0);
+    }
+    erase();
+}
+
 void screen_input() {
     int c = getch();
 
     switch (c) {
+        case KEY_RESIZE:
+            screen_resize();
+            break;
         case KEY_UP:
             bmove(s.b, UP);
             break;
@@ -347,8 +365,8 @@ int main(int argc, char *argv[]) {
     }
 
     // set initial screen state
-    getmaxyx(stdscr, s.maxy, s.maxx);
     set_tabsize(TABSTOP);
+    getmaxyx(stdscr, s.maxy, s.maxx);
     s.bufferwin = newwin(s.maxy - 1, s.maxx - 4, 0, 4);
     s.linenumbers = newwin(s.maxy - 1, 4, 0, 0);
     s.statusbar = newwin(1, s.maxx, s.maxy - 1, 0);
