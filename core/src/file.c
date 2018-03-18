@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "file.h"
-#include "jet.h"
+#include <core/file.h>
+#include <core/jet.h>
 
 /* opens a file using the given filename, and parses it into a buffer */
 buffer *readbuf(const char *filename) {

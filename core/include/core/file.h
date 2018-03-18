@@ -7,7 +7,7 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "buffer.h"
+#include <core/buffer.h>
 
 /* opens a file using the given filename, and parses it into a buffer */
 buffer *readbuf(const char *filename);

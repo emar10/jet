@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "line.h"
+#include <core/line.h>
 
 /* creates a new, empty line */
 line *newline() {
@@ -40,7 +40,7 @@ void laddch(line *l, const char c, int i) {
     lresize(l, l->len + 1);
 
     // offset memory if needed
-    if (i < l->len) {
+    if (l->s[i] != '\0' && i < l->len) {
         memmove(&l->s[i + 1], &l->s[i], l->len - i);
     }
 
@@ -50,11 +50,12 @@ void laddch(line *l, const char c, int i) {
 
 /* add a string to the line at the given index */
 void laddstr(line *l, const char *s, int len, int i) {
+    int oldlen = l->len;
     lresize(l, l->len + len);
 
     // offset if needed
-    if (i < l->len) {
-        memmove(&l->s[i + len], &l->s[i], l->len - i);
+    if (i < oldlen) {
+        memmove(&l->s[i + len], &l->s[i], oldlen - i);
     }
 
     // insert the string

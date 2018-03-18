@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "buffer.h"
+#include <core/buffer.h>
 
 /* returns a new, empty buffer */
 buffer *newbuf() {
@@ -63,6 +63,9 @@ void bdelline(buffer *b, int y) {
         memmove(&b->lines[y], &b->lines[y + 1], sizeof(line*) * (b->len - y));
     }
     b->dirty = true;
+
+    // realloc
+    b->lines = realloc(b->lines, sizeof(line*) * (b->len));
 }
 
 /* insert a character */
@@ -98,10 +101,10 @@ void baddbreak(buffer *b, int y, int x) {
 
     // if needed, append string to new line and shorten previous
     if (x < b->lines[y]->len) {
-        line *new = b->lines[y + 1];
+        line *next = b->lines[y + 1];
         line *prev = b->lines[y];
 
-        laddstr(new, &prev->s[x], prev->len - x, 0);
+        laddstr(next, &prev->s[x], prev->len - x, 0);
         lresize(prev, x);
     }
     b->dirty = true;

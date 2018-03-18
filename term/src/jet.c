@@ -1,19 +1,19 @@
 /*
  * jet.c
  * Ncurses Jet. For help, see README.md in the root directory.
- * Copyright (c) Ethan Martin
+ * Copyright (c) 2018 Ethan Martin
  */
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 0
+#define VERSION_PATCH 1
 
 #include <ncurses.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 
-#include "../core/jet.h"
+#include <core/jet.h>
 
 #define TABSTOP 4
 
@@ -224,10 +224,28 @@ int screen_is_printable(int c) {
     }
 }
 
+void screen_resize() {
+    getmaxyx(stdscr, s.maxy, s.maxx);
+
+    // move and resize windows
+    wresize(s.bufferwin, s.maxy - 1, s.maxx - 4);
+    wresize(s.linenumbers, s.maxy - 1, 4);
+    wresize(s.statusbar, 1, s.maxx);
+    mvwin(s.statusbar, s.maxy - 1, 0);
+    if (s.messagebox != NULL) {
+        wresize(s.messagebox, 1, s.maxx);
+        mvwin(s.messagebox, s.maxy - 1, 0);
+    }
+    erase();
+}
+
 void screen_input() {
     int c = getch();
 
     switch (c) {
+        case KEY_RESIZE:
+            screen_resize();
+            break;
         case KEY_UP:
             bmove(s.b, UP);
             break;
@@ -241,10 +259,13 @@ void screen_input() {
             bmove(s.b, LEFT);
             break;
         case KEY_PPAGE:
-            bmoveto(s.b, s.b->y - s.y, s.b->x);
+            bmoveto(s.b, s.b->y - (s.maxy - 1) - 1, s.b->x);
             break;
         case KEY_NPAGE:
-            bmoveto(s.b, s.b->y + s.y, s.b->x);
+            bmoveto(s.b, s.b->y + (s.maxy - 1) - 1, s.b->x);
+            if (s.b->y < s.b->len - 1) {
+                s.y = s.b->y;
+            }
             break;
         case KEY_HOME:
             bmoveto(s.b, s.b->y, 0);
@@ -344,8 +365,8 @@ int main(int argc, char *argv[]) {
     }
 
     // set initial screen state
-    getmaxyx(stdscr, s.maxy, s.maxx);
     set_tabsize(TABSTOP);
+    getmaxyx(stdscr, s.maxy, s.maxx);
     s.bufferwin = newwin(s.maxy - 1, s.maxx - 4, 0, 4);
     s.linenumbers = newwin(s.maxy - 1, 4, 0, 0);
     s.statusbar = newwin(1, s.maxx, s.maxy - 1, 0);
