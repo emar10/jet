@@ -24,7 +24,6 @@ enum attr_type {
 typedef struct attribute {
     enum attr_type type;
     bool enabled;
-    int i;
 } attribute;
 
 /* create new attribute pointer */

@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <core/jet.h>
+//#include <core/syntax.h>
 
 #define TABSTOP 4
 
@@ -151,11 +152,46 @@ void screen_draw_lines() {
         if (y + s.y < s.b->len) {
             line *l = s.b->lines[y + s.y];
             int x = 0;
+
             while (x < s.maxx - 4 && x < l->len - s.x) {
+                if (l->attrs[x + s.x] != NULL) {
+                    attribute *a = l->attrs[x + s.x];
+                    short curses_attr;
+
+                    switch (a->type) {
+                        case COLOR1:
+                            curses_attr = COLOR_PAIR(1);
+                            break;
+
+                        case COLOR2:
+                            curses_attr = COLOR_PAIR(2);
+                            break;
+
+                        case COLOR3:
+                            curses_attr = COLOR_PAIR(3);
+                            break;
+
+                        case COLOR4:
+                            curses_attr = COLOR_PAIR(4);
+                            break;
+
+                        default:
+                            curses_attr = A_NORMAL;
+                            break;
+                    }
+
+                    if (a->enabled) {
+                        wattron(s.bufferwin, curses_attr);
+                    } else {
+                        wattroff(s.bufferwin, curses_attr);
+                    }
+                }
+
                 waddch(s.bufferwin, (chtype)l->s[x + s.x]);
                 x++;
             }
         }
+        wattrset(s.bufferwin, A_NORMAL);
     }
 }
 
@@ -342,6 +378,36 @@ void screen_input() {
     }
 }
 
+buffer *testbuf() {
+    buffer *b = newbuf();
+
+    line *l = newline();
+    line *l2 = newline();
+    char *test = "this is a color, this is not, this is another color";
+    char *test2 = "this is also not bold";
+    laddstr(l, test, strlen(test), 0);
+    laddstr(l2, test2, strlen(test2), 0);
+
+    attribute *a1 = newattr();
+    attribute *a2 = newattr();
+    attribute *a3 = newattr();
+    a1->enabled = true;
+    a2->enabled = false;
+    a3->enabled = true;
+    a1->type = COLOR1;
+    a2->type = COLOR1;
+    a3->type = COLOR2;
+
+    laddattr(l, a1, 0);
+    laddattr(l, a2, 13);
+    laddattr(l, a3, 26);
+
+    bappendline(b, l);
+    bappendline(b, l2);
+
+    return b;
+}
+
 int main(int argc, char *argv[]) {
     // set up ncurses and enable raw mode so we can get those sweet, sweet keycodes
     initscr();
@@ -351,11 +417,19 @@ int main(int argc, char *argv[]) {
     keypad(stdscr, TRUE);
     define_key("\b", 8);
 
+    // setup colors
+    start_color();
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(3, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(4, COLOR_CYAN, COLOR_BLACK);
+
     // create buffer
     if (argc > 1) {
         s.b = readbuf(argv[1]);
     } else {
-        s.b = newbuf();
+        //s.b = newbuf();
+        s.b = testbuf();
     }
 
     // make sure the buffer has at least one line
@@ -373,6 +447,9 @@ int main(int argc, char *argv[]) {
     s.messagebox = NULL;
     s.y = s.x = 0;
 
+    // start syntax
+//    syntax_init();
+
     // add a friendly welcome message
     char message[80];
     sprintf(message, "Welcome to Jet v%d.%d.%d! Use Ctrl-H to display help.", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
@@ -383,3 +460,4 @@ int main(int argc, char *argv[]) {
         screen_input();
     }
 }
+

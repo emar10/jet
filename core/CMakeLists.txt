@@ -11,6 +11,7 @@ add_library(core_lib
             src/buffer.c
             src/file.c
             src/line.c
-            src/attribute.c)
+            src/attribute.c
+            )
 target_include_directories(core_lib PUBLIC include)
 

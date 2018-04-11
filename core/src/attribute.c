@@ -13,7 +13,6 @@ attribute *newattr() {
     attribute *a = malloc(sizeof(attribute));
     a->type = NORMAL;
     a->enabled = true;
-    a->i = 0;
 
     return a;
 }
