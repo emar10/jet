@@ -7,14 +7,16 @@
 #define SYNTAX_H
 
 #include <stdio.h>
+#include <stdbool.h>
 
 /* contains information required for a rule */
 typedef struct rule {
     char **s;
     int len;
 } rule;
-rule *rules = NULL;
-int rules_len = 0;
+rule *rules;
+int rules_len;
+bool syntax_enabled;
 
 /* initializes rules for c */
 void syntax_init();
@@ -24,7 +26,7 @@ void syntax_end();
 
 /* check a provided string for matches to the given rule. returns the length of
  * the match if found, or -1 if not found. */
-int match_rule(const char *s, int len, rule *r);
+int match_rule(const char *s, rule r);
 
 #endif
 

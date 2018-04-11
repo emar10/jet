@@ -19,7 +19,7 @@ line *newline() {
     l->len = 0;
 
     l->attrs = NULL;
-    l->needs_update = false;
+    l->needs_update = true;
 
     return l;
 }
@@ -58,6 +58,7 @@ void lresize(line *l, int len) {
     }
 
     l->len = len;
+    l->needs_update = true;
 }
 
 /* add an attribute to the line */
@@ -74,6 +75,13 @@ void lrmattr(line *l, int i) {
     }
 }
 
+/* clear the attributes from the line */
+void lclrattrs(line *l) {
+    for (int i = 0; i < l->len; i++) {
+        lrmattr(l, i);
+    }
+}
+
 /* add a character to the line at the given index */
 void laddch(line *l, const char c, int i) {
     lresize(l, l->len + 1);
@@ -85,6 +93,7 @@ void laddch(line *l, const char c, int i) {
 
     // insert the char
     l->s[i] = c;
+    l->needs_update = true;
 }
 
 /* add a string to the line at the given index */
@@ -99,6 +108,7 @@ void laddstr(line *l, const char *s, int len, int i) {
 
     // insert the string
     memcpy(&l->s[i], s, len);
+    l->needs_update = true;
 }
 
 /* delete the character at the given index */
@@ -108,5 +118,6 @@ void ldelch(line *l, int i) {
     }
 
     lresize(l, l->len - 1);
+    l->needs_update = true;
 }
 

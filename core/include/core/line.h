@@ -33,6 +33,9 @@ void laddattr(line *l, attribute *a, int i);
 /* remove an attribute from the line */
 void lrmattr(line *l, int i);
 
+/* clear the attributes from the line */
+void lclrattrs(line *l);
+
 /* add a character to the line */
 void laddch(line *l, const char c, int i);
 

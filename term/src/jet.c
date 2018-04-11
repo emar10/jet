@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include <core/jet.h>
-//#include <core/syntax.h>
 
 #define TABSTOP 4
 
@@ -224,6 +223,7 @@ void screen_update() {
     }
 
     // draw text
+    bgenattrs(s.b);
     screen_draw_lines();
 
     // draw status bar
@@ -428,8 +428,8 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         s.b = readbuf(argv[1]);
     } else {
-        //s.b = newbuf();
-        s.b = testbuf();
+        s.b = newbuf();
+        //s.b = testbuf();
     }
 
     // make sure the buffer has at least one line
@@ -448,7 +448,7 @@ int main(int argc, char *argv[]) {
     s.y = s.x = 0;
 
     // start syntax
-//    syntax_init();
+    syntax_init();
 
     // add a friendly welcome message
     char message[80];
