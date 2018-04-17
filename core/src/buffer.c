@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <core/buffer.h>
+#include <core/syntax.h>
 
 /* returns a new, empty buffer */
 buffer *newbuf() {
@@ -176,5 +177,53 @@ void bmove(buffer *b, enum direction dir) {
 void bname(buffer *b, const char *name) {
     b->name = realloc(b->name, strlen(name) + 1);
     strcpy(b->name, name);
+}
+
+/* generate the attributes for a buffer */
+void bgenattrs(buffer *b) {
+    attribute *last = NULL;
+    for (int i = 0; i < b->len; i++) {
+        if (b->lines[i]->needs_update && b->lines[i]->len > 0) {
+            line *l = b->lines[i];
+
+            lclrattrs(l);
+
+            for (int j = 0; j < l->len; j++) {
+                int match;
+
+                // single line comment
+                match = match_rule(&l->s[j], rules[1]);
+                if (match != -1) {
+                    attribute *beg = newattr();
+                    beg->enabled = true;
+                    beg->type = COLOR2;
+                    laddattr(l, beg, j);
+
+                    // we can't have any other attrs for the rest of the line
+                    break;
+                }
+
+                // keywords
+                match = match_rule(&l->s[j], rules[0]);
+                if (match != -1) {
+                    attribute *beg = newattr();
+                    beg->enabled = true;
+                    beg->type = COLOR1;
+                    laddattr(l, beg, j);
+
+                    if (j + match < l->len) {
+                        attribute *end = newattr();
+                        end->enabled = false;
+                        end->type = COLOR1;
+                        laddattr(l, end, j + match);
+                    }
+
+                    j += match;
+                }
+            }
+
+            l->needs_update = false;
+        }
+    }
 }
 
