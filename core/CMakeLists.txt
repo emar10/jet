@@ -9,11 +9,13 @@ add_library(core_lib
             include/core/attribute.h
             include/core/syntax.h
             include/core/jet.h
+            include/core/regex.h
             src/buffer.c
             src/file.c
             src/line.c
             src/attribute.c
             src/syntax.c
+            src/regex.c
             )
 target_include_directories(core_lib PUBLIC include)
 
