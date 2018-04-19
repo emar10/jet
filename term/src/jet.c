@@ -222,8 +222,10 @@ void screen_update() {
         }
     }
 
+    // generate syntax
+    gen_syntax(s.b);
+
     // draw text
-    bgenattrs(s.b);
     screen_draw_lines();
 
     // draw status bar
@@ -448,7 +450,7 @@ int main(int argc, char *argv[]) {
     s.y = s.x = 0;
 
     // start syntax
-    syntax_init();
+    syntax_init(s.b);
 
     // add a friendly welcome message
     char message[80];
