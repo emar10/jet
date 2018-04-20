@@ -105,9 +105,18 @@ void gen_syntax(buffer *b) {
                 rule r = key[i];
 
                 if (re_match(r.s, curr->s + x) == 0) {
-                    // add attrs from rule
+                    // create attrs
+                    attribute *beg;
+                    attribute *end;
+
+                    beg->enabled = true;
+                    beg->type = COLOR1;
+
+                    end->enabled = false;
+                    end->type = COLOR1;
                     
                     // update x
+
 
                     // break
                 }
