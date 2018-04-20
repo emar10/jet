@@ -78,5 +78,43 @@ void syntax_end() {
 
 /* generate syntax attributes for the given buffer */
 void gen_syntax(buffer *b) {
-    ;
+    // only proceed if syntax is enabled
+    if (!syntax_enabled) {
+        return;
+    }
+    
+    int y, x;
+    line *prev, *curr, *next;
+
+    // iterate over each line
+    for (y = 0; y < b->len; y++) {
+        x = 0;
+        curr = b->lines[y];
+
+        // only regenerate if needed
+        if (!curr->needs_update) {
+            continue;
+        }
+
+        lclrattrs(curr);
+
+        // check each x for matches to any rule
+        do {
+            // keywords
+            for (int i = 0; i < key_len; i++) {
+                rule r = key[i];
+
+                if (re_match(r.s, curr->s + x) == 0) {
+                    // add attrs from rule
+                    
+                    // update x
+
+                    // break
+                }
+            }
+
+            x++;
+        } while (x < curr->len);
+    }
 }
+
