@@ -51,12 +51,20 @@ void syntax_init(buffer *b) {
 
     // hoo boy we're in the clear, let's go
     // keywords first
-    key_len = 1;
-    key = malloc(sizeof(rule));
-    key[0].len = 3;
-    key[0].s = malloc(4);
-    strcpy(key[0].s, "int");
-    key[0].type = COLOR1;
+    const char* keywords[] = {
+        "break", "case", "char", "const", "continue", "default", "do",
+        "double", "else", "enum", "extern", "float", "for", "goto", "if",
+        "int", "long", "return", "short", "signed", "sizeof", "static",
+        "struct", "switch", "typedef", "union", "unsigned", "void", "while"
+    };
+    key_len = 29;
+    key = malloc(sizeof(rule) * 29);
+    for (int i = 0; i < key_len; i++) {
+        key[i].len = strlen(keywords[i]);
+        key[i].s = malloc(key[i].len + 1);
+        strcpy(key[i].s, keywords[i]);
+        key[i].type = COLOR1;
+    }
 
     // regular expressions
     reg_len = 0;
