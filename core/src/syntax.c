@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #include <core/attribute.h>
 #include <core/syntax.h>
@@ -29,6 +30,9 @@ static bool syntax_enabled = false;
  */
 static rule *key, *reg, *enc_b, *enc_e;
 static int key_len, reg_len, enc_len;
+
+/* private functions */
+static bool test_keyword(const line *l, int i, rule r);
 
 /* sets up syntax  */
 void syntax_init(buffer *b) {
@@ -112,7 +116,7 @@ void gen_syntax(buffer *b) {
             for (int i = 0; i < key_len; i++) {
                 rule r = key[i];
 
-                if (re_match(r.s, curr->s + x) == 0) {
+                if (test_keyword(curr, x, r)) {
                     // create attrs
                     attribute beg = { COLOR1, true };
                     attribute end = { COLOR1, false };
@@ -135,3 +139,18 @@ void gen_syntax(buffer *b) {
     }
 }
 
+/* checks for matches to rule r with a keyword in l at index i */
+static bool test_keyword(const line *l, int i, rule r) {
+    // do we have the word?
+    if (re_match(r.s, l->s + i) != 0) {
+        return false;
+    }
+
+    // is this an actual word?
+    if ((i != 0 && isalpha(l->s[i - 1])) 
+            || (i + r.len != l->len && isalpha(l->s[i + r.len]))) {
+        return false;
+    }
+
+    return true;
+}
