@@ -153,11 +153,11 @@ void screen_draw_lines() {
             int x = 0;
 
             while (x < s.maxx - 4 && x < l->len - s.x) {
-                if (l->attrs[x + s.x] != NULL) {
-                    attribute *a = l->attrs[x + s.x];
+                if (l->attrs[x + s.x].type != NONE) {
+                    attribute a = l->attrs[x + s.x];
                     short curses_attr;
 
-                    switch (a->type) {
+                    switch (a.type) {
                         case COLOR1:
                             curses_attr = COLOR_PAIR(1);
                             break;
@@ -179,7 +179,7 @@ void screen_draw_lines() {
                             break;
                     }
 
-                    if (a->enabled) {
+                    if (a.enabled) {
                         wattron(s.bufferwin, curses_attr);
                     } else {
                         wattroff(s.bufferwin, curses_attr);
@@ -380,36 +380,6 @@ void screen_input() {
     }
 }
 
-buffer *testbuf() {
-    buffer *b = newbuf();
-
-    line *l = newline();
-    line *l2 = newline();
-    char *test = "this is a color, this is not, this is another color";
-    char *test2 = "this is also not bold";
-    laddstr(l, test, strlen(test), 0);
-    laddstr(l2, test2, strlen(test2), 0);
-
-    attribute *a1 = newattr();
-    attribute *a2 = newattr();
-    attribute *a3 = newattr();
-    a1->enabled = true;
-    a2->enabled = false;
-    a3->enabled = true;
-    a1->type = COLOR1;
-    a2->type = COLOR1;
-    a3->type = COLOR2;
-
-    laddattr(l, a1, 0);
-    laddattr(l, a2, 13);
-    laddattr(l, a3, 26);
-
-    bappendline(b, l);
-    bappendline(b, l2);
-
-    return b;
-}
-
 int main(int argc, char *argv[]) {
     // set up ncurses and enable raw mode so we can get those sweet, sweet keycodes
     initscr();
@@ -431,7 +401,6 @@ int main(int argc, char *argv[]) {
         s.b = readbuf(argv[1]);
     } else {
         s.b = newbuf();
-        //s.b = testbuf();
     }
 
     // make sure the buffer has at least one line

@@ -11,6 +11,7 @@
 
 /* define possible attributes */
 enum attr_type {
+    NONE,
     NORMAL,
     BOLD,
     HIGHLIGHT,
@@ -25,6 +26,9 @@ typedef struct attribute {
     enum attr_type type;
     bool enabled;
 } attribute;
+
+/* returns a blank attribute */
+attribute nullattr();
 
 /* create new attribute pointer */
 attribute *newattr();

@@ -14,7 +14,7 @@
 typedef struct line {
     int len;
     char *s;
-    attribute **attrs;
+    attribute *attrs;
     bool needs_update;
 } line;
 
@@ -28,10 +28,7 @@ void delline(line *l);
 void lresize(line *l, int len);
 
 /* add an attribute to the line */
-void laddattr(line *l, attribute *a, int i);
-
-/* remove an attribute from the line */
-void lrmattr(line *l, int i);
+void laddattr(line *l, attribute a, int i);
 
 /* clear the attributes from the line */
 void lclrattrs(line *l);

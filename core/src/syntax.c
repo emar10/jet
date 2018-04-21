@@ -82,7 +82,7 @@ void gen_syntax(buffer *b) {
     if (!syntax_enabled) {
         return;
     }
-    
+
     int y, x;
     line *prev, *curr, *next;
 
@@ -106,24 +106,24 @@ void gen_syntax(buffer *b) {
 
                 if (re_match(r.s, curr->s + x) == 0) {
                     // create attrs
-                    attribute *beg;
-                    attribute *end;
+                    attribute beg = { COLOR1, true };
+                    attribute end = { COLOR1, false };
 
-                    beg->enabled = true;
-                    beg->type = COLOR1;
+                    // add attributes and update x
+                    laddattr(curr, beg, x);
+                    x += r.len;
+                    if (x < curr->len) {
+                        laddattr(curr, end, x);
+                    }
 
-                    end->enabled = false;
-                    end->type = COLOR1;
-                    
-                    // update x
-
-
-                    // break
+                    break;
                 }
             }
 
             x++;
         } while (x < curr->len);
+
+        curr->needs_update = false;
     }
 }
 
