@@ -33,6 +33,7 @@ static int key_len, reg_len, enc_len;
 
 /* private functions */
 static bool test_keyword(const line *l, int i, rule r);
+static int test_regex(const line *l, int i, rule r);
 
 /* sets up syntax  */
 void syntax_init(buffer *b) {
@@ -112,23 +113,50 @@ void gen_syntax(buffer *b) {
 
         // check each x for matches to any rule
         do {
-            // keywords
-            for (int i = 0; i < key_len; i++) {
-                rule r = key[i];
+            bool matched = false;
+            // regexes
+            if (!matched) {
+                for (int i = 0; i < reg_len; i++) {
+                    rule r = reg[i];
+                    int len;
 
-                if (test_keyword(curr, x, r)) {
-                    // create attrs
-                    attribute beg = { COLOR1, true };
-                    attribute end = { COLOR1, false };
+                    if ((len = test_regex(curr, x, r)) != -1) {
+                        // create attrs
+                        attribute beg = { r.type, true };
+                        attribute end = { r.type, false };
 
-                    // add attributes and update x
-                    laddattr(curr, beg, x);
-                    x += r.len;
-                    if (x < curr->len) {
-                        laddattr(curr, end, x);
+                        // add attributes and update x
+                        laddattr(curr, beg, x);
+                        x += r.len;
+                        if (x < curr->len) {
+                            laddattr(curr, end, x);
+                        }
+
+                        matched = true;
+                        break;
                     }
+                }
+            }
 
-                    break;
+            // keywords
+            if (!matched) {
+                for (int i = 0; i < key_len; i++) {
+                    rule r = key[i];
+
+                    if (test_keyword(curr, x, r)) {
+                        // create attrs
+                        attribute beg = { r.type, true };
+                        attribute end = { r.type, false };
+
+                        // add attributes and update x
+                        laddattr(curr, beg, x);
+                        x += r.len;
+                        if (x < curr->len) {
+                            laddattr(curr, end, x);
+                        }
+
+                        break;
+                    }
                 }
             }
 
@@ -147,10 +175,19 @@ static bool test_keyword(const line *l, int i, rule r) {
     }
 
     // is this an actual word?
-    if ((i != 0 && isalpha(l->s[i - 1])) 
+    if ((i != 0 && isalpha(l->s[i - 1]))
             || (i + r.len != l->len && isalpha(l->s[i + r.len]))) {
         return false;
     }
 
     return true;
 }
+
+/* checks for matches to rule r with provided index and regex. returns -1 if no
+ * match is found, length of the match otherwise */
+static int test_regex(const line *l, int i, rule r) {
+    int len = re_match(r.s, l->s + i);
+
+    return len;
+}
+
