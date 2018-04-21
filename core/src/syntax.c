@@ -72,7 +72,13 @@ void syntax_init(buffer *b) {
     }
 
     // regular expressions
-    reg_len = 0;
+    const char* comment = "//.*$";
+    reg_len = 1;
+    reg = malloc(sizeof(rule));
+    reg[0].len = strlen(comment);
+    reg[0].s = malloc(strlen(comment + 1));
+    strcpy(reg[0].s, comment);
+    reg[0].type = COLOR2;
 
     // encapsulations
     enc_len = 0;
@@ -127,7 +133,7 @@ void gen_syntax(buffer *b) {
 
                         // add attributes and update x
                         laddattr(curr, beg, x);
-                        x += r.len;
+                        x += len;
                         if (x < curr->len) {
                             laddattr(curr, end, x);
                         }
@@ -170,7 +176,7 @@ void gen_syntax(buffer *b) {
 /* checks for matches to rule r with a keyword in l at index i */
 static bool test_keyword(const line *l, int i, rule r) {
     // do we have the word?
-    if (re_match(r.s, l->s + i) != 0) {
+    if (re_match(r.s, l->s + i) == -1) {
         return false;
     }
 
