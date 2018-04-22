@@ -1,6 +1,7 @@
 /**
  * syntax.c
  * Implements functions for matching syntax
+ * Copyright (c) 2018 Ethan Martin
  */
 
 #include <string.h>
@@ -73,12 +74,21 @@ void syntax_init(buffer *b) {
 
     // regular expressions
     const char* comment = "//.*$";
-    reg_len = 1;
-    reg = malloc(sizeof(rule));
+    const char* preprocessor = "#.+$";
+    reg_len = 2;
+    reg = malloc(sizeof(rule) * reg_len);
+
+    // single line comments
     reg[0].len = strlen(comment);
     reg[0].s = malloc(strlen(comment + 1));
     strcpy(reg[0].s, comment);
     reg[0].type = COLOR2;
+
+    // preprocessor commands
+    reg[1].len = strlen(preprocessor);
+    reg[1].s = malloc(strlen(preprocessor) + 1);
+    strcpy(reg[1].s, preprocessor);
+    reg[1].type = COLOR3;
 
     // encapsulations
     enc_len = 0;
