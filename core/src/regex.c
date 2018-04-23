@@ -56,6 +56,11 @@ typedef struct regex_t
 
 
 
+/* private members */
+static int match_len;
+
+
+
 /* Private function declarations: */
 static int matchpattern(regex_t* pattern, const char* text);
 static int matchcharclass(char c, const char* str);
@@ -79,25 +84,19 @@ int re_match(const char* pattern, const char* text)
 
 int re_matchp(re_t pattern, const char* text)
 {
+    match_len = 0;
     if (pattern != 0)
     {
         if (pattern[0].type == BEGIN)
         {
-            return ((matchpattern(&pattern[1], text)) ? 0 : -1);
+            return ((matchpattern(&pattern[1], text)) ? 1 : -1);
         }
         else
         {
-            int idx = -1;
-
-            do
+            if (matchpattern(pattern, text))
             {
-                idx += 1;
-                if (matchpattern(pattern, text))
-                {
-                    return idx;
-                }
+                return match_len;
             }
-            while (*text++ != '\0');
         }
     }
     return -1;
@@ -361,6 +360,7 @@ static int matchstar(regex_t p, regex_t* pattern, const char* text)
 {
     do
     {
+        match_len++;
         if (matchpattern(pattern, text))
             return 1;
     }
@@ -373,6 +373,7 @@ static int matchplus(regex_t p, regex_t* pattern, const char* text)
 {
     while ((text[0] != '\0') && matchone(p, *text++))
     {
+        match_len++;
         if (matchpattern(pattern, text))
             return 1;
     }
@@ -383,6 +384,7 @@ static int matchquestion(regex_t p, regex_t* pattern, const char* text)
 {
     if ((text[0] != '\0') && matchone(p, *text++))
     {
+        match_len++;
         matchpattern(pattern, text);
     }
     return 1;
@@ -450,6 +452,7 @@ static int matchpattern(regex_t* pattern, const char* text)
             return (matchpattern(pattern, text) || matchpattern(&pattern[2], text));
             }
             */
+        match_len++;
     }
     while ((text[0] != '\0') && matchone(*pattern++, *text++));
 

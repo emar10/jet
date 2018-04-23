@@ -8,6 +8,12 @@
 
 #include <core/attribute.h>
 
+/* creates and returns an empty attribute */
+attribute nullattr() {
+    attribute a = { NONE, false };
+    return a;
+}
+
 /* create new attribute with default values */
 attribute *newattr() {
     attribute *a = malloc(sizeof(attribute));

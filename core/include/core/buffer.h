@@ -4,12 +4,11 @@
  * Copyright (c) 2018 Ethan Martin
  */
 
-#ifndef BUFFER_H
-#define BUFFER_H
+#pragma once
+
 #include <stdbool.h>
 
 #include <core/line.h>
-#include <core/syntax.h>
 
 typedef struct buffer {
     int y, x;
@@ -63,9 +62,4 @@ void bmove(buffer *b, enum direction dir);
 
 /* name the buffer */
 void bname(buffer *b, const char *name);
-
-/* generate attributes in the buffer */
-void bgenattrs(buffer *b);
-
-#endif
 

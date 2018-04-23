@@ -6,6 +6,7 @@
 
 #include <core/buffer.h>
 #include <core/file.h>
+#include <core/syntax.h>
 
 /* fatal error, print a message and terminate the program */
 void die(const char *error, int code);
