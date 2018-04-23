@@ -1,4 +1,4 @@
-# Jet v0.1
+# Jet v0.2
 "Snappy" terminal-based \*nix editor written in C using ncurses.
 
 ## Prerequisites
@@ -13,6 +13,8 @@ new files can be opened with Ctrl-O.
 
 Run using `jet <filename>`. Arrow keys navigate through the file, Page Up and Page Down to scroll,
 Home and End snap to beginning/end of line. Ctrl-Q to quit.
+
+Jet features basic syntax highlighting for C.
 
 ## A note on trustworthiness
 Jet is now at the point where it can theoretically be used as a general-purpose editor.
