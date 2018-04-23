@@ -141,6 +141,7 @@ void gen_syntax(buffer *b) {
 
     // iterate over each line
     for (y = 0; y < b->len; y++) {
+        bool enc_ended = false;
         x = 0;
         if (y > 0) {
             prev = b->lines[y - 1];
@@ -192,6 +193,7 @@ void gen_syntax(buffer *b) {
                     curr_enc = -1;
                 }
 
+                enc_ended = true;
                 matched = true;
             }
 
@@ -270,7 +272,7 @@ void gen_syntax(buffer *b) {
         }
 
         // if we're in an encapsulation, we always want this line to update
-        if (curr_enc == -1) {
+        if (curr_enc == -1 && !enc_ended) {
             curr->needs_update = false;
         }
     }
