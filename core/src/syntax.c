@@ -91,7 +91,30 @@ void syntax_init(buffer *b) {
     reg[1].type = COLOR3;
 
     // encapsulations
-    enc_len = 0;
+    const char *comment_beg = "/\\*";
+    const char *comment_end = "\\*/";
+    const char *string = "\"";
+    enc_len = 2;
+    enc_b = malloc(sizeof(rule) * enc_len);
+    enc_e = malloc(sizeof(rule) * enc_len);
+
+    // multiline comment
+    enc_b[0].len = strlen(comment_beg);
+    enc_b[0].s = malloc(strlen(comment_beg) + 1);
+    strcpy(enc_b[0].s, comment_beg);
+    enc_e[0].len = strlen(comment_end);
+    enc_e[0].s = malloc(strlen(comment_end) + 1);
+    strcpy(enc_e[0].s, comment_end);
+    enc_b[0].type = enc_e[0].type = COLOR2;
+
+    // strings
+    enc_b[1].len = strlen(string);
+    enc_b[1].s = malloc(strlen(string) + 1);
+    strcpy(enc_b[1].s, string);
+    enc_e[1].len = strlen(string);
+    enc_e[1].s = malloc(strlen(string) + 1);
+    strcpy(enc_e[1].s, string);
+    enc_b[1].type = enc_e[1].type = COLOR4;
 
     syntax_enabled = true;
 }
@@ -114,11 +137,22 @@ void gen_syntax(buffer *b) {
 
     int y, x;
     line *prev, *curr, *next;
+    int curr_enc = -1;
 
     // iterate over each line
     for (y = 0; y < b->len; y++) {
         x = 0;
+        if (y > 0) {
+            prev = b->lines[y - 1];
+        } else {
+            prev = NULL;
+        }
         curr = b->lines[y];
+        if (y < b->len - 1) {
+            next = b->lines[y + 1];
+        } else {
+            next = NULL;
+        }
 
         // only regenerate if needed
         if (!curr->needs_update) {
@@ -127,9 +161,60 @@ void gen_syntax(buffer *b) {
 
         lclrattrs(curr);
 
+        // if we're in an encapsulation, add begin attribute
+        if (curr_enc != -1 && curr->len > 0) {
+            attribute a = { enc_b[curr_enc].type, true };
+            laddattr(curr, a, 0);
+        }
+
         // check each x for matches to any rule
         do {
             bool matched = false;
+            // closing encapsulations
+            if (curr_enc != -1) {
+                rule r = enc_e[curr_enc];
+                int len;
+
+                if ((len = re_match(r.s, curr->s + x)) != -1) {
+                    // create the attribute
+                    attribute a = { r.type, false };
+
+                    x += len;
+                    if (x < curr->len) {
+                        laddattr(curr, a, x);
+                    }
+
+                    // following lines need to be updated
+                    for (int j = y + 1; j < b->len; j++) {
+                        b->lines[j]->needs_update = true;
+                    }
+
+                    curr_enc = -1;
+                }
+
+                matched = true;
+            }
+
+            // opening encapsulations
+            if (!matched) {
+                for (int i = 0; i < enc_len; i++) {
+                    rule r = enc_b[i];
+                    int len;
+
+                    if ((len = re_match(r.s, curr->s + x)) != -1) {
+                        // create attr
+                        attribute a = { r.type, true };
+
+                        laddattr(curr, a, x);
+                        x += len - 1;
+
+                        curr_enc = i;
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+
             // regexes
             if (!matched) {
                 for (int i = 0; i < reg_len; i++) {
@@ -179,7 +264,15 @@ void gen_syntax(buffer *b) {
             x++;
         } while (x < curr->len);
 
-        curr->needs_update = false;
+        // if we are in an encapsulation, we need to update the next line
+        if (next != NULL && curr_enc != -1) {
+            next->needs_update = true;
+        }
+
+        // if we're in an encapsulation, we always want this line to update
+        if (curr_enc == -1) {
+            curr->needs_update = false;
+        }
     }
 }
 
