@@ -65,7 +65,11 @@ void syntax_readfiles() {
 #endif
 
 #ifdef __linux__
-    readlink("/proc/self/exe", dirpath, sizeof(dirpath) - 1);
+    size_t len;
+    len = readlink("/proc/self/exe", dirpath, sizeof(dirpath) - 1);
+    if (len != -1) {
+        dirpath[len] = '\0';
+    }
 #endif
     if (dirpath[0] == '\0') {
         return;
