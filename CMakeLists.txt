@@ -13,3 +13,7 @@ add_subdirectory(core)
 
 add_executable(jet term/src/jet.c)
 target_link_libraries(jet PRIVATE core_lib ncurses)
+
+install(TARGETS jet
+        RUNTIME DESTINATION bin)
+install(DIRECTORY share/jet DESTINATION share)

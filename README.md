@@ -5,7 +5,8 @@
 Jet requires Ncurses, and CMake for building.
 
 ## Building
-Clone, `cmake ./`, `make`. Binary is written as `jet`.
+Clone, `cmake ./`, `make`, `make install`. Binary is written as `jet`.
+To change the install prefix, call CMake with `-DCMAKE_INSTALL_PREFIX=<prefix>`
 
 ## Usage
 Jet can open existing files or start with an empty buffer. Changes can be saved with Ctrl-S, and
