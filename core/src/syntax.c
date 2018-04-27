@@ -9,6 +9,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <dirent.h>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
 
 #include <core/attribute.h>
 #include <core/syntax.h>
@@ -34,12 +43,80 @@ static bool syntax_enabled = false;
 static rule *key, *reg, *enc_b, *enc_e;
 static int key_len, reg_len, enc_len;
 
+static char **filetypes;
+static char **jsrfiles;
+static int fileslen;
+
 /* private functions */
 static bool test_keyword(const line *l, int i, rule r);
 static int test_regex(const line *l, int i, rule r);
 
 /* populates list of supported filetypes */
 void syntax_readfiles() {
+    fileslen = 0;
+
+    // get the syntax directory using <exedir>/../share/jet/syntax
+    const char *syntax_loc = "/../share/jet/syntax";
+    char dirpath[1024];
+
+#ifdef __APPLE__
+    uint32_t len = 1024;
+    _NSGetExecutablePath(dirpath, &len);
+#endif
+
+#ifdef __linux__
+    readlink("/proc/self/exe", dirpath, sizeof(dirpath) - 1);
+#endif
+    if (dirpath[0] == '\0') {
+        return;
+    }
+    dirpath[strlen(dirpath) - 4] = '\0';
+    strcat(dirpath, syntax_loc);
+
+    // grab all the syntax files
+    DIR *d = opendir(dirpath);
+    struct dirent *curr;
+    if (!d) {
+        return;
+    }
+    while ((curr = readdir(d)) != NULL) {
+        // ignore ./ and ../
+        if (strcmp(curr->d_name, ".") == 0 || strcmp(curr->d_name, "..") == 0) {
+            continue;
+        }
+
+        char fpath[512];
+        strcpy(fpath, dirpath);
+        strcat(fpath, "/");
+        strcat(fpath, curr->d_name);
+
+        // read the first line of the file and add entries to available filetypes
+        buffer *buf = readbuf(fpath);
+        if (buf->len == 0) {
+            delbuf(buf);
+            closedir(d);
+            return;
+        }
+        char *ext = strtok(buf->lines[0]->s, " ");
+        while (ext != NULL) {
+            filetypes = realloc(filetypes, sizeof(char*) * fileslen + 1);
+            filetypes[fileslen] = malloc(strlen(ext) + 1);
+            strcpy(filetypes[fileslen], ext);
+
+            jsrfiles = realloc(jsrfiles, sizeof(char*) * fileslen + 1);
+            jsrfiles[fileslen] = malloc(strlen(fpath) + 1);
+            strcpy(jsrfiles[fileslen], fpath);
+
+            fileslen++;
+            ext = strtok(NULL, " ");
+        }
+    }
+
+    closedir(d);
+}
+
+/* clears the list of supported filetypes */
+void syntax_clearfiles() {
 
 }
 
@@ -58,14 +135,19 @@ void syntax_init(buffer *b) {
     ext++;
 
     // if we don't support the extension, no syntax for you
-    if (!(strcmp(ext, "c") == 0 || strcmp(ext, "h") == 0)) {
+    char *fname = NULL;
+    for (int i = 0; i < fileslen; i++) {
+        if (strcmp(ext, filetypes[i]) == 0) {
+            fname = jsrfiles[i];
+            break;
+        }
+    }
+    if (fname == NULL) {
         return;
     }
 
     // hoo boy we're in the clear, let's go
-    // hard load for now
-    buffer *syn = readbuf("share/jet/syntax/c.jsr");
-
+    buffer *syn = readbuf(fname);
 
     // for each line (except the first)
     for (int y = 1; y < syn->len; y++) {
@@ -156,6 +238,8 @@ void syntax_init(buffer *b) {
         }
     }
 
+    delbuf(syn);
+
     syntax_enabled = true;
 }
 
@@ -166,6 +250,22 @@ void syntax_end() {
     }
     free(key);
     key_len = 0;
+
+    for (int i = 0; i < reg_len; i++) {
+        free(reg[i].s);
+    }
+    free(reg);
+    reg_len = 0;
+
+    for (int i = 0; i < enc_len; i++) {
+        free(enc_b[i].s);
+        free(enc_e[i].s);
+    }
+    free(enc_b);
+    free(enc_e);
+    enc_len = 0;
+
+    syntax_enabled = false;
 }
 
 /* generate syntax attributes for the given buffer */
