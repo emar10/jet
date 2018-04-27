@@ -163,7 +163,7 @@ void syntax_init(buffer *b) {
         char val[2048];
 
         // parse our data
-        sscanf(l->s, "%s %s %[^\0]", attr, type, val);
+        sscanf(l->s, "%s %s %[^\n]", attr, type, val);
 
         // set the attribute
         if (strcmp(attr, "HIGHLIGHT") == 0) {
