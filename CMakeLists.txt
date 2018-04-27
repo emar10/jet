@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(jet VERSION 0.2.0 LANGUAGES C)
+project(jet VERSION 1.0.0 LANGUAGES C)
 
 # enable testing through cmake
 enable_testing()
@@ -13,3 +13,7 @@ add_subdirectory(core)
 
 add_executable(jet term/src/jet.c)
 target_link_libraries(jet PRIVATE core_lib ncurses)
+
+install(TARGETS jet
+        RUNTIME DESTINATION bin)
+install(DIRECTORY share/jet DESTINATION share)

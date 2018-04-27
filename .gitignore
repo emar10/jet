@@ -1,6 +1,3 @@
-# binary
-jet
-
 # build files
 *.o
 *.a
@@ -12,5 +9,4 @@ jet
 CMakeFiles/
 CMakeCache.txt
 *.cmake
-Makefile
 build/
