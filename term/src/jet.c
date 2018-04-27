@@ -35,7 +35,6 @@ void screen_shutdown() {
     delwin(s.statusbar);
     delwin(s.messagebox);
     delwin(s.linenumbers);
-    delbuf(s.b);
     endwin();
     syntax_end();
     syntax_clearfiles();
