@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+/* populates the list of supported file types */
+void syntax_readfiles();
+
 /* initializes syntax rules based on filetype */
 void syntax_init(buffer *b);
 

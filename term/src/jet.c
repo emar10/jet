@@ -419,6 +419,7 @@ int main(int argc, char *argv[]) {
     s.y = s.x = 0;
 
     // start syntax
+    syntax_readfiles();
     syntax_init(s.b);
 
     // add a friendly welcome message

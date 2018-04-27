@@ -8,11 +8,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <stdio.h>
 
 #include <core/attribute.h>
 #include <core/syntax.h>
 #include <core/regex.h>
 #include <core/line.h>
+#include <core/file.h>
 
 typedef struct _rule {
     char *s;
@@ -36,6 +38,11 @@ static int key_len, reg_len, enc_len;
 static bool test_keyword(const line *l, int i, rule r);
 static int test_regex(const line *l, int i, rule r);
 
+/* populates list of supported filetypes */
+void syntax_readfiles() {
+
+}
+
 /* sets up syntax  */
 void syntax_init(buffer *b) {
     // if we don't have a name, no syntax for you
@@ -56,65 +63,98 @@ void syntax_init(buffer *b) {
     }
 
     // hoo boy we're in the clear, let's go
-    // keywords first
-    const char* keywords[] = {
-        "break", "case", "char", "const", "continue", "default", "do",
-        "double", "else", "enum", "extern", "float", "for", "goto", "if",
-        "int", "long", "return", "short", "signed", "sizeof", "static",
-        "struct", "switch", "typedef", "union", "unsigned", "void", "while"
-    };
-    key_len = 29;
-    key = malloc(sizeof(rule) * 29);
-    for (int i = 0; i < key_len; i++) {
-        key[i].len = strlen(keywords[i]);
-        key[i].s = malloc(key[i].len + 1);
-        strcpy(key[i].s, keywords[i]);
-        key[i].type = COLOR1;
+    // hard load for now
+    buffer *syn = readbuf("share/jet/syntax/c.jsr");
+
+
+    // for each line (except the first)
+    for (int y = 1; y < syn->len; y++) {
+        line *l = syn->lines[y];
+        enum attr_type a;
+
+        char type[512];
+        char attr[512];
+        char val[2048];
+
+        // parse our data
+        sscanf(l->s, "%s %s %[^\0]", attr, type, val);
+
+        // set the attribute
+        if (strcmp(attr, "HIGHLIGHT") == 0) {
+            a = HIGHLIGHT;
+        }
+        else if (strcmp(attr, "BOLD") == 0) {
+            a = BOLD;
+        }
+        else if (strcmp(attr, "COLOR1") == 0) {
+            a = COLOR1;
+        }
+        else if (strcmp(attr, "COLOR2") == 0) {
+            a = COLOR2;
+        }
+        else if (strcmp(attr, "COLOR3") == 0) {
+            a = COLOR3;
+        }
+        else if (strcmp(attr, "COLOR4") == 0) {
+            a = COLOR4;
+        }
+        else a = NONE;
+
+        // keywords
+        if (strcmp(type, "KEY") == 0) {
+            char *k = strtok(val, " ");
+            while (k != NULL) {
+                rule r;
+                r.len = strlen(k);
+                r.s = malloc(r.len + 1);
+                strcpy(r.s, k);
+                r.type = a;
+
+                key_len++;
+                key = realloc(key, sizeof(rule) * key_len);
+                key[key_len - 1] = r;
+
+                k = strtok(NULL, " ");
+            }
+        }
+
+        // regex
+        else if (strcmp(type, "REG") == 0) {
+            rule r;
+            r.len = strlen(val);
+            r.s = malloc(r.len + 1);
+            strcpy(r.s, val);
+            r.type = a;
+
+            reg_len++;
+            reg = realloc(reg, sizeof(rule) * reg_len);
+            reg[reg_len - 1] = r;
+        }
+
+        // encapsulation
+        else if (strcmp(type, "ENC") == 0) {
+            rule b, e;
+            char bs[128], es[128];            
+            sscanf(val, "%s %s", bs, es);
+
+            b.len = strlen(bs);
+            b.s = malloc(b.len + 1);
+            strcpy(b.s, bs);
+            b.type = a;
+
+            e.len = strlen(es);
+            e.s = malloc(e.len + 1);
+            strcpy(e.s, es);
+            e.type = a;
+
+            enc_len++;
+            enc_b = realloc(enc_b, sizeof(rule) * enc_len);
+            enc_b[enc_len - 1] = b;
+
+            enc_e = realloc(enc_e, sizeof(rule) * enc_len);
+            enc_e[enc_len - 1] = e;
+        }
     }
-
-    // regular expressions
-    const char* comment = "//.*$";
-    const char* preprocessor = "#.+$";
-    reg_len = 2;
-    reg = malloc(sizeof(rule) * reg_len);
-
-    // single line comments
-    reg[0].len = strlen(comment);
-    reg[0].s = malloc(strlen(comment + 1));
-    strcpy(reg[0].s, comment);
-    reg[0].type = COLOR2;
-
-    // preprocessor commands
-    reg[1].len = strlen(preprocessor);
-    reg[1].s = malloc(strlen(preprocessor) + 1);
-    strcpy(reg[1].s, preprocessor);
-    reg[1].type = COLOR3;
-
-    // encapsulations
-    const char *comment_beg = "/\\*";
-    const char *comment_end = "\\*/";
-    const char *string = "\"";
-    enc_len = 2;
-    enc_b = malloc(sizeof(rule) * enc_len);
-    enc_e = malloc(sizeof(rule) * enc_len);
-
-    // multiline comment
-    enc_b[0].len = strlen(comment_beg);
-    enc_b[0].s = malloc(strlen(comment_beg) + 1);
-    strcpy(enc_b[0].s, comment_beg);
-    enc_e[0].len = strlen(comment_end);
-    enc_e[0].s = malloc(strlen(comment_end) + 1);
-    strcpy(enc_e[0].s, comment_end);
-    enc_b[0].type = enc_e[0].type = COLOR2;
-
-    // strings
-    enc_b[1].len = strlen(string);
-    enc_b[1].s = malloc(strlen(string) + 1);
-    strcpy(enc_b[1].s, string);
-    enc_e[1].len = strlen(string);
-    enc_e[1].s = malloc(strlen(string) + 1);
-    strcpy(enc_e[1].s, string);
-    enc_b[1].type = enc_e[1].type = COLOR4;
 
     syntax_enabled = true;
 }
