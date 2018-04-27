@@ -12,6 +12,7 @@
 
 /* populates the list of supported file types */
 void syntax_readfiles();
+void syntax_clearfiles();
 
 /* initializes syntax rules based on filetype */
 void syntax_init(buffer *b);

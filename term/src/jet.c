@@ -35,7 +35,10 @@ void screen_shutdown() {
     delwin(s.statusbar);
     delwin(s.messagebox);
     delwin(s.linenumbers);
+    delbuf(s.b);
     endwin();
+    syntax_end();
+    syntax_clearfiles();
 }
 
 void die(const char *error, int code) {
@@ -139,9 +142,15 @@ void screen_open() {
 
     if (strlen(filename) > 0) {
         buffer *b = readbuf(filename);
+        if (b->len == 0) {
+            baddline(b, 0);
+            b->dirty = false;
+        }
         delbuf(s.b);
         s.b = b;
         s.y = s.x = 0;
+        syntax_end();
+        syntax_init(s.b);
     }
 }
 

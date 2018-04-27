@@ -121,7 +121,14 @@ void syntax_readfiles() {
 
 /* clears the list of supported filetypes */
 void syntax_clearfiles() {
+    for (int i = 0; i < fileslen; i++) {
+        free(filetypes[i]);
+        free(jsrfiles[i]);
+    }
 
+    free(filetypes);
+    free(jsrfiles);
+    fileslen = 0;
 }
 
 /* sets up syntax  */
@@ -267,6 +274,8 @@ void syntax_end() {
     }
     free(enc_b);
     free(enc_e);
+
+    key = reg = enc_b = enc_e = NULL;
     enc_len = 0;
 
     syntax_enabled = false;
