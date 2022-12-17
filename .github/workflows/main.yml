@@ -12,7 +12,7 @@ jobs:
       - name: Install Dependencies 
         run: sudo apt-get install build-essential -y
       - name: Cmake Build 
-        run : cmake - Bbuild -H. && cmake --build build
+        run : cmake - Bbuild -H && cmake --build build
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
