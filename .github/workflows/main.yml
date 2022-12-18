@@ -1,0 +1,23 @@
+name: CI/CD Build 
+
+on: [push, fork, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Cmake Build 
+        run : cmake .
+
+      - name: Make
+        run : make 
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: jet-bin
+          path: jet
+          retention-days: 10 
